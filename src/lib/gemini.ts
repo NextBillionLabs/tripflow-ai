@@ -8,9 +8,7 @@ for (let i = 1; i <= 10; i++) {
 }
 
 if (API_KEYS.length === 0) {
-  throw new Error(
-    "No Gemini API keys found. Add GEMINI_API_KEY_1, GEMINI_API_KEY_2, etc. to .env.local"
-  );
+  console.warn("No Gemini API keys found. Add GEMINI_API_KEY_1, GEMINI_API_KEY_2, etc. to environment variables.");
 }
 
 // Round-robin counter for load balancing
@@ -38,7 +36,10 @@ export async function generateWithGemini(
     maxOutputTokens?: number;
   }
 ): Promise<string> {
-  const model = options?.model ?? "gemini-3.6-flash";
+  if (API_KEYS.length === 0) {
+    throw new Error("No Gemini API keys configured. Add GEMINI_API_KEY_1 etc. to environment variables.");
+  }
+  const model = options?.model ?? "gemini-2.5-flash";
   const maxRetries = API_KEYS.length;
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
