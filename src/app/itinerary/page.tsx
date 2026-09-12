@@ -431,7 +431,7 @@ function ItineraryContent() {
       <TripHeader trip={tripData.trip} weatherAlert={tripData.weatherAlert} />
       <div className="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         <div className="lg:col-span-8">
-          <JourneyTimeline days={tripData.days} />
+          <JourneyTimeline days={tripData.days} destination={tripData.trip.to} />
         </div>
         <div className="lg:col-span-4">
           <TripSidebar

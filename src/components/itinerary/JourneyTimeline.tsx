@@ -38,6 +38,7 @@ function DirectionButton({ place }: { place: string }) {
 
 interface JourneyTimelineProps {
   days: DayPlan[];
+  destination?: string;
 }
 
 const nodeStyles: Record<string, { bg: string; icon: string }> = {
@@ -574,7 +575,7 @@ function ReturnCard({ segment }: { segment: Segment }) {
   );
 }
 
-function SegmentCard({ segment }: { segment: Segment }) {
+function SegmentCard({ segment, destination }: { segment: Segment; destination?: string }) {
   const style = nodeStyles[segment.type] ?? nodeStyles.activity;
   const labelColor = labelColors[segment.type] ?? "text-slate-600";
 
@@ -607,12 +608,12 @@ function SegmentCard({ segment }: { segment: Segment }) {
         {segment.type === "transfer" && <TransferCard segment={segment} />}
         {segment.type === "stay" && (
           <>
-            <PlaceGallery placeName={segment.title} placeType="stay" />
+            <PlaceGallery placeName={segment.title} placeType="stay" destination={destination} />
             <StayCard segment={segment} />
           </>
         )}
         {segment.type === "activity" && (
-          <PlaceGallery placeName={segment.title} placeType="activity" />
+          <PlaceGallery placeName={segment.title} placeType="activity" destination={destination} />
         )}
         {segment.type === "activity" && segment.foodOptions && <FoodCard segment={segment} />}
         {segment.type === "food" && (
@@ -627,7 +628,7 @@ function SegmentCard({ segment }: { segment: Segment }) {
   );
 }
 
-export default function JourneyTimeline({ days }: JourneyTimelineProps) {
+export default function JourneyTimeline({ days, destination }: JourneyTimelineProps) {
   const [expandedDay] = useState<number | null>(null);
   void expandedDay;
 
@@ -647,7 +648,7 @@ export default function JourneyTimeline({ days }: JourneyTimelineProps) {
 
           {/* Segments */}
           {day.segments.map((segment, i) => (
-            <SegmentCard key={`${day.day}-${i}`} segment={segment} />
+            <SegmentCard key={`${day.day}-${i}`} segment={segment} destination={destination} />
           ))}
         </div>
       ))}

@@ -6,9 +6,11 @@ interface PlaceGalleryProps {
   placeName: string;
   /** Only show for scenic/tourist places — skip transport hubs */
   placeType: "activity" | "stay" | "food";
+  /** City name to ensure photos are from the right location */
+  destination?: string;
 }
 
-export default function PlaceGallery({ placeName, placeType }: PlaceGalleryProps) {
+export default function PlaceGallery({ placeName, placeType, destination }: PlaceGalleryProps) {
   const [thumb, setThumb] = useState<string | null>(null);
   const [photos, setPhotos] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -17,11 +19,13 @@ export default function PlaceGallery({ placeName, placeType }: PlaceGalleryProps
   const [modalPhotos, setModalPhotos] = useState<string[]>([]);
   const [loadingMore, setLoadingMore] = useState(false);
 
-  // Build a smart search query — skip generic words for food
+  // Build a smart search query — always include city name for accuracy
   const buildQuery = () => {
-    if (placeType === "food") return `${placeName} restaurant`;
-    if (placeType === "stay") return `${placeName} scenic view`;
-    return placeName;
+    const city = destination || "";
+    const base = placeName.replace(/&/g, " ").trim();
+    if (placeType === "food") return `${base} restaurant ${city}`.trim();
+    if (placeType === "stay") return `${base} ${city}`.trim();
+    return `${base} ${city}`.trim();
   };
 
   useEffect(() => {
