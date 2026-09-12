@@ -220,6 +220,7 @@ IMPORTANT RULES:
 - If feasible but long, ALWAYS include flight options in the transport alternatives if the train/bus takes more than 12 hours.
 - Use REAL Indian city names, train numbers, bus services (GSRTC, MSRTC, RSRTC etc.)
 - Use REAL restaurant/dhaba names when possible, or realistic-sounding ones
+- NEVER use "Bus Stand", "Railway Station", "Bus Depot" or any transport hub as a Stay segment title. Use the actual tourist area, market, lake, or neighborhood name (e.g. "Saputara Lake Area", "Mall Road", "Old City", "Lake Pichola Area"). Stay titles should feel like a vacation, not a transit point.
 - Prices must be realistic for Indian travel (trains ₹50-500, buses ₹100-500, hotels ₹1000-5000, flights ₹4000-10000)
 - Include local food specialties of the region
 - Include 2-3 tourist attractions per day
