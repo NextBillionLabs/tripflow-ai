@@ -108,6 +108,10 @@ function ItineraryContent() {
       title = "Our AI is busy right now";
       message = "Too many people are planning trips! Please wait 30 seconds and try again.";
       icon = "hourglass_top";
+    } else if (error.includes("IMPRACTICAL_TRIP")) {
+      title = "Trip not feasible";
+      message = error.replace("IMPRACTICAL_TRIP: ", "");
+      icon = "distance";
     } else if (error.includes("429") || error.includes("quota") || error.includes("RESOURCE_EXHAUSTED")) {
       title = "Rate limit reached";
       message = "We've hit the AI request limit. Please wait a minute and try again.";

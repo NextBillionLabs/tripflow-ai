@@ -91,6 +91,7 @@ RESPOND WITH ONLY VALID JSON. No markdown, no explanation, no backticks.
 
 JSON Format:
 {
+  "error": "OPTIONAL. If the requested duration is physically impossible given the travel distance (e.g. asking for a 1-day trip from Surat to Giridih, which takes 30h by train), output a friendly error message starting with 'IMPRACTICAL_TRIP: ' and explaining why it's not possible, suggesting flights, or stating the minimum days required. Only include this field if the trip is genuinely impossible to fit in the requested timeframe.",
   "trip": {
     "title": "City A → City B → City A",
     "from": "Origin City",
@@ -214,9 +215,11 @@ JSON Format:
 }
 
 IMPORTANT RULES:
+- VALIDATE FEASIBILITY: Before generating, check if the distance can be covered within the requested days. If a user asks for a 1-day trip for a 1000km+ journey, it is IMPOSSIBLE. You must return ONLY the "error" field in the JSON with "IMPRACTICAL_TRIP: ..." suggesting flights or the minimum required days.
+- If feasible but long, ALWAYS include flight options in the transport alternatives if the train/bus takes more than 12 hours.
 - Use REAL Indian city names, train numbers, bus services (GSRTC, MSRTC, RSRTC etc.)
 - Use REAL restaurant/dhaba names when possible, or realistic-sounding ones
-- Prices must be realistic for Indian travel (trains ₹50-500, buses ₹100-500, hotels ₹1000-5000)
+- Prices must be realistic for Indian travel (trains ₹50-500, buses ₹100-500, hotels ₹1000-5000, flights ₹4000-10000)
 - Include local food specialties of the region
 - Include 2-3 tourist attractions per day
 - Include at least 2 food options per meal (breakfast, lunch, dinner)

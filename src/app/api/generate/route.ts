@@ -24,6 +24,11 @@ export async function POST(request: NextRequest) {
     // Parse and validate the JSON
     const itinerary = JSON.parse(cleaned);
 
+    // If Gemini determined the trip is impractical, throw the error back to frontend
+    if (itinerary.error) {
+      return NextResponse.json({ error: itinerary.error }, { status: 400 });
+    }
+
     return NextResponse.json({ itinerary });
   } catch (error: unknown) {
     console.error("Generate API error:", error);
