@@ -263,10 +263,15 @@ function ItineraryContent() {
     const isBudgetError = error.includes("UNREALISTIC_BUDGET");
     if (isBudgetError) {
       const cleanMessage = error.replace("UNREALISTIC_BUDGET: ", "");
-      // Extract minimum budget like "minimum ₹3,500" or "₹2,500"
-      const minBudgetMatch = cleanMessage.match(/(?:minimum\s+)?₹([\d,]+)/i);
-      const minBudget = minBudgetMatch?.[1]?.replace(/,/g, "") || "";
+      // Extract ALL ₹ amounts, pick the LARGEST one (that's the minimum realistic budget)
+      const allAmounts = [...cleanMessage.matchAll(/₹([\d,]+)/g)].map(m => Number(m[1].replace(/,/g, "")));
+      const minBudget = allAmounts.length > 0 ? Math.max(...allAmounts).toString() : "";
       const originalQuery = new URLSearchParams(window.location.search).get("query") || "";
+
+      // Shorten the message — just keep the key info
+      const shortMessage = cleanMessage.length > 120
+        ? cleanMessage.split(".").slice(0, 2).join(".") + "."
+        : cleanMessage;
 
       return (
         <div className="min-h-[75vh] flex flex-col items-center justify-center px-4" style={{ animation: "fadeSlideUp 0.4s ease-out" }}>
@@ -290,7 +295,7 @@ function ItineraryContent() {
               <div className="bg-rose-50 border border-rose-200/60 rounded-2xl p-4 mb-6 text-left">
                 <div className="flex items-start gap-3">
                   <span className="material-symbols-outlined text-rose-500 text-[20px] mt-0.5 shrink-0">info</span>
-                  <p className="text-sm text-rose-900 leading-relaxed">{cleanMessage}</p>
+                  <p className="text-sm text-rose-900 leading-relaxed">{shortMessage}</p>
                 </div>
               </div>
             </div>
