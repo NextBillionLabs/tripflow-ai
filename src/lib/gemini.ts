@@ -216,6 +216,7 @@ JSON Format:
 
 IMPORTANT RULES:
 - VALIDATE FEASIBILITY: Before generating, check if the distance can be covered within the requested days. If a user asks for a 1-day trip for a 1000km+ journey, it is IMPOSSIBLE. You must return ONLY the "error" field in the JSON with "IMPRACTICAL_TRIP: ..." suggesting flights or the minimum required days.
+- VALIDATE BUDGET: If the user's budget is unrealistically low for the route (e.g. ₹20 for Surat to Giridih), return ONLY the "error" field with "UNREALISTIC_BUDGET: ..." explaining why it's not possible. Include the MINIMUM realistic budget as a number like "minimum ₹X,XXX" for the cheapest possible trip (general class train + budget dhaba + no hotel if 1 day). Always mention what the cheapest transport alone would cost.
 - If feasible but long, ALWAYS include flight options in the transport alternatives if the train/bus takes more than 12 hours.
 - Use REAL Indian city names, train numbers, bus services (GSRTC, MSRTC, RSRTC etc.)
 - Use REAL restaurant/dhaba names when possible, or realistic-sounding ones

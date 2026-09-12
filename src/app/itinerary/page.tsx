@@ -259,6 +259,86 @@ function ItineraryContent() {
       );
     }
 
+    // ─── Unrealistic Budget Error (Special UI) ─────────────────────────
+    const isBudgetError = error.includes("UNREALISTIC_BUDGET");
+    if (isBudgetError) {
+      const cleanMessage = error.replace("UNREALISTIC_BUDGET: ", "");
+      // Extract minimum budget like "minimum ₹3,500" or "₹2,500"
+      const minBudgetMatch = cleanMessage.match(/(?:minimum\s+)?₹([\d,]+)/i);
+      const minBudget = minBudgetMatch?.[1]?.replace(/,/g, "") || "";
+      const originalQuery = new URLSearchParams(window.location.search).get("query") || "";
+
+      return (
+        <div className="min-h-[75vh] flex flex-col items-center justify-center px-4" style={{ animation: "fadeSlideUp 0.4s ease-out" }}>
+          <div className="max-w-lg w-full">
+            <div className="text-center mb-8">
+              {/* Animated wallet icon */}
+              <div className="relative w-28 h-28 mx-auto mb-6">
+                <div className="absolute inset-0 rounded-full border-2 border-rose-200 animate-ping opacity-20" style={{ animationDuration: "2s" }} />
+                <div className="relative w-28 h-28 rounded-full bg-gradient-to-br from-rose-50 via-red-50 to-orange-50 flex items-center justify-center shadow-xl shadow-rose-200/30">
+                  <span className="material-symbols-outlined text-rose-500 text-[48px]">
+                    account_balance_wallet
+                  </span>
+                </div>
+              </div>
+
+              <h2 className="text-2xl font-bold text-slate-900 mb-3">
+                Budget too low for this trip
+              </h2>
+
+              {/* Info card */}
+              <div className="bg-rose-50 border border-rose-200/60 rounded-2xl p-4 mb-6 text-left">
+                <div className="flex items-start gap-3">
+                  <span className="material-symbols-outlined text-rose-500 text-[20px] mt-0.5 shrink-0">info</span>
+                  <p className="text-sm text-rose-900 leading-relaxed">{cleanMessage}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Action cards */}
+            <div className="space-y-3">
+              {minBudget && (
+                <button
+                  onClick={() => {
+                    // Replace budget in query with minimum realistic budget
+                    let newQuery = originalQuery.replace(/(?:budget\s*)?₹?\s*\d+/i, `budget ${minBudget}`);
+                    if (newQuery === originalQuery) {
+                      newQuery = originalQuery + ` budget ${minBudget}`;
+                    }
+                    window.location.href = `/itinerary?query=${encodeURIComponent(newQuery)}`;
+                  }}
+                  className="w-full flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-emerald-50 to-emerald-100/50 border border-emerald-200 hover:border-emerald-300 hover:shadow-lg hover:shadow-emerald-100 transition-all cursor-pointer group"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform shadow-lg shadow-emerald-600/30">
+                    <span className="material-symbols-outlined text-white text-[24px]">savings</span>
+                  </div>
+                  <div className="text-left">
+                    <span className="text-sm font-bold text-emerald-900">Show cheapest option — ₹{Number(minBudget).toLocaleString("en-IN")}</span>
+                    <span className="text-xs text-emerald-600 block mt-0.5">✨ Bare minimum — general class + budget food</span>
+                  </div>
+                  <span className="material-symbols-outlined text-emerald-500 ml-auto text-[20px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                </button>
+              )}
+
+              <button
+                onClick={() => { window.location.href = "/"; }}
+                className="w-full flex items-center gap-4 p-4 rounded-2xl bg-white border border-slate-200 hover:border-slate-300 hover:shadow-md transition-all cursor-pointer group"
+              >
+                <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                  <span className="material-symbols-outlined text-slate-600 text-[24px]">edit</span>
+                </div>
+                <div className="text-left">
+                  <span className="text-sm font-bold text-slate-900">Change trip details</span>
+                  <span className="text-xs text-slate-500 block mt-0.5">Pick a closer city or increase budget</span>
+                </div>
+                <span className="material-symbols-outlined text-slate-400 ml-auto text-[20px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     // ─── Generic Error UI ────────────────────────────────────────────
     let title = "Oops! Something went wrong";
     let subtitle = "We couldn't generate your itinerary";
