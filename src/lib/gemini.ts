@@ -39,7 +39,7 @@ export async function generateWithGemini(
   if (API_KEYS.length === 0) {
     throw new Error("No Gemini API keys configured. Add GEMINI_API_KEY_1 etc. to environment variables.");
   }
-  const model = options?.model ?? "gemini-2.5-flash";
+  const model = options?.model ?? "gemini-3.6-flash";
   const maxRetries = API_KEYS.length;
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {

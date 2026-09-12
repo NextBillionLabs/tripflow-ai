@@ -1,7 +1,22 @@
 "use client";
 
 import { useState } from "react";
+import PlaceGallery from "@/components/itinerary/PlaceGallery";
 import type { DayPlan, Segment } from "@/types/itinerary";
+import {
+  getTrainCheckUrl,
+  getTrainStatusUrl,
+  getTrainSearchUrl,
+  getIrctcUrl,
+  getBusUrl,
+  getAbhiBusUrl,
+  getOyoUrl,
+  getMakeMyTripHotelUrl,
+  getBookingUrl,
+  getSavaariUrl,
+  getUberUrl,
+  getOlaUrl,
+} from "@/lib/affiliate";
 
 function DirectionButton({ place }: { place: string }) {
   const openDirections = () => {
@@ -90,14 +105,18 @@ function TransportCard({ segment }: { segment: Segment }) {
     else if (a.mode === "cab") cabs.push({ name: a.name, duration: a.duration, price: a.price });
   });
 
-  // Booking URLs
-  const getTrainBookingUrl = (trainName: string) => {
-    const trainNo = trainName.match(/\d{4,5}/)?.[0] || "";
-    if (trainNo) return `https://www.confirmtkt.com/train-details/${trainNo}`;
-    return "https://www.confirmtkt.com";
-  };
-  const getBusBookingUrl = () => `https://www.redbus.in`;
-  const getIrctcUrl = () => "https://www.irctc.co.in/nget/train-search";
+  // Booking URLs — from affiliate.ts (affiliate IDs injected automatically)
+  const trainCheckUrl = (name: string) => getTrainCheckUrl(name);
+  const trainStatusUrl = (name: string) => getTrainStatusUrl(name);
+  const trainSearchUrl = () => getTrainSearchUrl(
+    segment.title?.replace(/\s*(Railway|Station|Junction).*$/i, "").trim() || "",
+    ""
+  );
+  const busUrl = () => getBusUrl(
+    segment.title?.replace(/\s*(Railway|Station|Bus Stand|Junction).*$/i, "").trim() || "",
+    ""
+  );
+  const cabFromCity = segment.title?.replace(/\s*(Railway|Station|Junction).*$/i, "").trim() || "";
 
   // Train class prices (estimated from base price)
   const getClassPrices = (basePrice: number) => [
@@ -232,7 +251,7 @@ function TransportCard({ segment }: { segment: Segment }) {
                     {/* Action buttons */}
                     <div className="flex gap-1.5 mb-2">
                       <a
-                        href={getTrainBookingUrl(train.name)}
+                        href={trainCheckUrl(train.name)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex-1 py-2 rounded-lg bg-teal-600 text-white text-[10px] font-bold text-center hover:bg-teal-700 transition-colors cursor-pointer flex items-center justify-center gap-1"
@@ -241,7 +260,7 @@ function TransportCard({ segment }: { segment: Segment }) {
                         Check Availability
                       </a>
                       <a
-                        href={`https://www.confirmtkt.com/train-running-status/${train.name.match(/\d{4,5}/)?.[0] || ""}`}
+                        href={trainStatusUrl(train.name)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="py-2 px-2.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-[10px] font-bold text-center hover:bg-amber-100 transition-colors cursor-pointer flex items-center gap-1"
@@ -265,7 +284,7 @@ function TransportCard({ segment }: { segment: Segment }) {
               {/* Find all trains link */}
               <div className="pt-1 border-t border-slate-100">
                 <a
-                  href={`https://www.confirmtkt.com/rbooking/`}
+                  href={trainSearchUrl()}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-center gap-1.5 py-2 text-[11px] font-semibold text-teal-700 hover:text-teal-900 cursor-pointer"
@@ -301,14 +320,24 @@ function TransportCard({ segment }: { segment: Segment }) {
                       <span className="text-xs text-slate-400">/seat</span>
                     </div>
                   </div>
-                  <a
-                    href={getBusBookingUrl()}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block w-full py-2 rounded-lg bg-red-600 text-white text-[11px] font-bold text-center hover:bg-red-700 transition-colors cursor-pointer"
-                  >
-                    🚌 Book on RedBus
-                  </a>
+                  <div className="flex gap-2">
+                    <a
+                      href={busUrl()}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 py-2 rounded-lg bg-red-600 text-white text-[11px] font-bold text-center hover:bg-red-700 transition-colors cursor-pointer"
+                    >
+                      🚌 RedBus
+                    </a>
+                    <a
+                      href={getAbhiBusUrl(cabFromCity, "")}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 py-2 rounded-lg bg-orange-500 text-white text-[11px] font-bold text-center hover:bg-orange-600 transition-colors cursor-pointer"
+                    >
+                      AbhiBus
+                    </a>
+                  </div>
                 </div>
               ))}
 
@@ -321,7 +350,7 @@ function TransportCard({ segment }: { segment: Segment }) {
                       </div>
                       <div>
                         <span className="text-sm font-bold text-slate-900">{cab.name}</span>
-                        <span className="text-xs text-slate-500 block">{cab.duration} • Sedan/SUV</span>
+                        <span className="text-xs text-slate-500 block">{cab.duration} • Outstation</span>
                       </div>
                     </div>
                     <div className="text-right">
@@ -330,11 +359,15 @@ function TransportCard({ segment }: { segment: Segment }) {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <a href="https://www.uber.com" target="_blank" rel="noopener noreferrer"
+                    <a href={getSavaariUrl(cabFromCity, "")} target="_blank" rel="noopener noreferrer"
+                      className="flex-1 py-2 rounded-lg bg-teal-700 text-white text-[11px] font-bold text-center hover:bg-teal-800 transition-colors cursor-pointer">
+                      🚗 Savaari
+                    </a>
+                    <a href={getUberUrl()} target="_blank" rel="noopener noreferrer"
                       className="flex-1 py-2 rounded-lg bg-black text-white text-[11px] font-bold text-center hover:bg-slate-800 transition-colors cursor-pointer">
                       Uber
                     </a>
-                    <a href="https://www.olacabs.com" target="_blank" rel="noopener noreferrer"
+                    <a href={getOlaUrl(cabFromCity, "")} target="_blank" rel="noopener noreferrer"
                       className="flex-1 py-2 rounded-lg bg-green-600 text-white text-[11px] font-bold text-center hover:bg-green-700 transition-colors cursor-pointer">
                       Ola
                     </a>
@@ -346,7 +379,7 @@ function TransportCard({ segment }: { segment: Segment }) {
                 <div className="text-center py-4">
                   <p className="text-xs text-slate-400 mb-2">No bus/cab options listed</p>
                   <a
-                    href={getBusBookingUrl()}
+                    href={busUrl()}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-block py-2 px-4 rounded-lg bg-red-600 text-white text-[11px] font-bold hover:bg-red-700 transition-colors cursor-pointer"
@@ -404,8 +437,10 @@ function TransferCard({ segment }: { segment: Segment }) {
 }
 
 function StayCard({ segment }: { segment: Segment }) {
+  const [showHotels, setShowHotels] = useState(false);
   if (!segment.hotel) return null;
   const h = segment.hotel;
+  const city = segment.title?.replace(/\s*(Town Center|City|Area|Hotel|Stay).*$/i, "").trim() || segment.title || "";
 
   return (
     <div className="mt-3 bg-slate-50 rounded-xl p-4 border border-slate-100">
@@ -427,11 +462,45 @@ function StayCard({ segment }: { segment: Segment }) {
         </span>
         <button
           type="button"
-          className="px-3.5 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-semibold hover:bg-teal-700 transition-colors cursor-pointer"
+          onClick={() => setShowHotels(!showHotels)}
+          className="px-3.5 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-semibold hover:bg-teal-700 transition-colors cursor-pointer flex items-center gap-1"
         >
-          Book Now
+          <span className="material-symbols-outlined text-[14px]">hotel</span>
+          {showHotels ? "Hide Options" : "Book Hotel"}
         </button>
       </div>
+
+      {showHotels && (
+        <div className="mt-3 pt-3 border-t border-slate-200 grid grid-cols-3 gap-2 animate-[fadeSlideUp_0.2s_ease-out]">
+          <a
+            href={getOyoUrl(city)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex flex-col items-center gap-1 py-2.5 rounded-xl bg-red-50 border border-red-200/60 hover:bg-red-100 transition-colors cursor-pointer"
+          >
+            <span className="text-sm font-black text-red-600">OYO</span>
+            <span className="text-[9px] font-semibold text-red-500">Budget stays</span>
+          </a>
+          <a
+            href={getMakeMyTripHotelUrl(city)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex flex-col items-center gap-1 py-2.5 rounded-xl bg-blue-50 border border-blue-200/60 hover:bg-blue-100 transition-colors cursor-pointer"
+          >
+            <span className="text-sm font-black text-blue-600">MMT</span>
+            <span className="text-[9px] font-semibold text-blue-500">MakeMyTrip</span>
+          </a>
+          <a
+            href={getBookingUrl(city)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex flex-col items-center gap-1 py-2.5 rounded-xl bg-indigo-50 border border-indigo-200/60 hover:bg-indigo-100 transition-colors cursor-pointer"
+          >
+            <span className="text-sm font-black text-indigo-600">B.com</span>
+            <span className="text-[9px] font-semibold text-indigo-500">Booking.com</span>
+          </a>
+        </div>
+      )}
     </div>
   );
 }
@@ -536,9 +605,21 @@ function SegmentCard({ segment }: { segment: Segment }) {
         {/* Type-specific content */}
         {segment.type === "departure" && <TransportCard segment={segment} />}
         {segment.type === "transfer" && <TransferCard segment={segment} />}
-        {segment.type === "stay" && <StayCard segment={segment} />}
+        {segment.type === "stay" && (
+          <>
+            <PlaceGallery placeName={segment.title} placeType="stay" />
+            <StayCard segment={segment} />
+          </>
+        )}
+        {segment.type === "activity" && (
+          <PlaceGallery placeName={segment.title} placeType="activity" />
+        )}
         {segment.type === "activity" && segment.foodOptions && <FoodCard segment={segment} />}
-        {segment.type === "food" && <FoodCard segment={segment} />}
+        {segment.type === "food" && (
+          <>
+            <FoodCard segment={segment} />
+          </>
+        )}
         {segment.type === "return" && <ReturnCard segment={segment} />}
         {segment.type === "return" && segment.transport && <TransportCard segment={segment} />}
       </div>
