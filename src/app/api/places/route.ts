@@ -18,17 +18,35 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Step 1: Find the place
-    const searchRes = await fetch(
+    // Clean the query — remove generic words that confuse Google Places
+    const cleanQuery = query
+      .replace(/\b(area|zone|check.?in|arrival|departure|hotel|stay|visit|explore)\b/gi, "")
+      .replace(/&/g, " ")
+      .trim();
+
+    // Step 1: Try exact place name first (no suffix)
+    let searchRes = await fetch(
       `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(
-        query + " India tourist attraction"
+        cleanQuery
       )}&key=${API_KEY}`
     );
-    const searchData = await searchRes.json();
-    const placeId = searchData.results?.[0]?.place_id;
+    let searchData = await searchRes.json();
+    let placeId = searchData.results?.[0]?.place_id;
+
+    // Step 2: If no results, try with "India" suffix
+    if (!placeId) {
+      searchRes = await fetch(
+        `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(
+          cleanQuery + " India"
+        )}&key=${API_KEY}`
+      );
+      searchData = await searchRes.json();
+      placeId = searchData.results?.[0]?.place_id;
+    }
+
     if (!placeId) return NextResponse.json({ photos: [] });
 
-    // Step 2: Get photo references from place details
+    // Step 3: Get photo references from place details
     const detailsRes = await fetch(
       `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=photos,name&key=${API_KEY}`
     );
@@ -36,7 +54,7 @@ export async function GET(request: NextRequest) {
     const rawPhotos: Array<{ photo_reference: string }> =
       detailsData.result?.photos || [];
 
-    // Step 3: Build photo URLs (limit to requested count)
+    // Step 4: Build photo URLs (limit to requested count)
     const photoUrls = rawPhotos.slice(0, Math.min(limit, 20)).map(
       (p) =>
         `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photoreference=${p.photo_reference}&key=${API_KEY}`
