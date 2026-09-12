@@ -157,7 +157,13 @@ function ItineraryContent() {
     // ─── Impractical Trip Error (Special UI) ─────────────────────────
     if (isImpractical) {
       const cleanMessage = error.replace("IMPRACTICAL_TRIP: ", "");
-      const suggestedDays = cleanMessage.match(/(\d+)[\s-]?day/i)?.[1] || "";
+      // Extract the RECOMMENDED minimum days — look for "minimum of X", "at least X day", "X to Y days"
+      const minDaysMatch = cleanMessage.match(/(?:minimum\s+(?:duration\s+)?(?:of\s+)?|at\s+least\s+|recommend\s+)(\d+)/i)
+        || cleanMessage.match(/(\d+)\s*(?:to\s*\d+)?\s*days?\s+(?:is\s+)?(?:required|needed|recommended|minimum)/i);
+      const suggestedDays = minDaysMatch?.[1] || "";
+
+      // Get the original query to modify
+      const originalQuery = new URLSearchParams(window.location.search).get("query") || "";
 
       return (
         <div className="min-h-[75vh] flex flex-col items-center justify-center px-4" style={{ animation: "fadeSlideUp 0.4s ease-out" }}>
@@ -194,10 +200,12 @@ function ItineraryContent() {
               {suggestedDays && (
                 <button
                   onClick={() => {
-                    const params = new URLSearchParams(window.location.search);
-                    const currentQuery = params.get("query") || "";
-                    const newQuery = currentQuery.replace(/\d+\s*day/i, `${suggestedDays} day`);
-                    window.location.href = `/itinerary?query=${encodeURIComponent(newQuery !== currentQuery ? newQuery : currentQuery + ` ${suggestedDays} days`)}`;
+                    // Replace the day count in original query with AI-suggested days
+                    let newQuery = originalQuery.replace(/\d+\s*day/i, `${suggestedDays} day`);
+                    if (newQuery === originalQuery) {
+                      newQuery = originalQuery + ` ${suggestedDays} days`;
+                    }
+                    window.location.href = `/itinerary?query=${encodeURIComponent(newQuery)}`;
                   }}
                   className="w-full flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-teal-50 to-teal-100/50 border border-teal-200 hover:border-teal-300 hover:shadow-lg hover:shadow-teal-100 transition-all cursor-pointer group"
                 >
@@ -214,9 +222,10 @@ function ItineraryContent() {
 
               <button
                 onClick={() => {
-                  const params = new URLSearchParams(window.location.search);
-                  const currentQuery = params.get("query") || "";
-                  const flightQuery = currentQuery.includes("flight") ? currentQuery : currentQuery + " by flight";
+                  // Add "by flight" to the query so AI considers flights
+                  const flightQuery = originalQuery.includes("flight")
+                    ? originalQuery
+                    : originalQuery + " prefer flight";
                   window.location.href = `/itinerary?query=${encodeURIComponent(flightQuery)}`;
                 }}
                 className="w-full flex items-center gap-4 p-4 rounded-2xl bg-white border border-slate-200 hover:border-blue-200 hover:bg-blue-50/50 hover:shadow-md transition-all cursor-pointer group"
@@ -232,7 +241,7 @@ function ItineraryContent() {
               </button>
 
               <button
-                onClick={() => window.history.back()}
+                onClick={() => { window.location.href = "/"; }}
                 className="w-full flex items-center gap-4 p-4 rounded-2xl bg-white border border-slate-200 hover:border-slate-300 hover:shadow-md transition-all cursor-pointer group"
               >
                 <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
