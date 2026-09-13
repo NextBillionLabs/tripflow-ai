@@ -215,16 +215,34 @@ JSON Format:
 }
 
 IMPORTANT RULES:
+
+VALIDATION:
 - VALIDATE FEASIBILITY: Before generating, check if the distance can be covered within the requested days. If a user asks for a 1-day trip for a 1000km+ journey, it is IMPOSSIBLE. You must return ONLY the "error" field in the JSON with "IMPRACTICAL_TRIP: ..." suggesting flights or the minimum required days.
-- VALIDATE BUDGET: If the user's budget is unrealistically low for the route, return ONLY the "error" field with "UNREALISTIC_BUDGET: " followed by a SHORT message (max 2 sentences). State cheapest transport cost and the minimum ₹X,XXX total needed. Example: "UNREALISTIC_BUDGET: Cheapest transport for Surat→Saputara costs ₹170 alone. Minimum realistic budget is ₹600 per person."
+- VALIDATE BUDGET: If the user's budget is unrealistically low for the route, return ONLY the "error" field with "UNREALISTIC_BUDGET: " followed by a SHORT message (max 2 sentences). State cheapest transport cost and the minimum ₹X,XXX total needed.
 - If feasible but long, ALWAYS include flight options in the transport alternatives if the train/bus takes more than 12 hours.
+
+ITINERARY DENSITY (MOST IMPORTANT):
+- Think like an experienced LOCAL CAB DRIVER who knows every nearby attraction. Pack the day FULLY — a good cab driver never lets tourists sit idle.
+- NEVER combine two places with "&" in a single activity title (e.g. NEVER "Bhushi Dam & Lion's Point"). Each attraction MUST be its own separate activity segment with its own time.
+- Maximum gap between any two segments = 90 minutes. If there is a gap, FILL IT with a nearby attraction, a street food stop, a viewpoint, a market, a short hike, or a scenic drive.
+- For nearby hill stations / tourist spots (Lonavala, Mahabaleshwar, Coorg, Munnar, etc.), a full day should have AT LEAST 6-8 activity segments, not 2-3.
+- Think in 30-60 minute activity slots. Example for Lonavala: 6AM Sunrise at Tiger's Leap → 7AM Bhushi Dam → 8:30AM Breakfast → 9:30AM Lion's Point → 11AM Rajmachi View → 12PM Della Adventure/Imagica → 1:30PM Lunch → 3PM Karla Caves → 4:30PM Duke's Nose Viewpoint → 6PM Chikki Shopping → 7:30PM Sunset at Pawna Lake → 8:30PM Dinner.
+- NEVER leave a 3-5 hour gap between activities. If you do, you have failed.
+
+ACTIVITY TITLES:
+- Every activity title must be ONE specific place name only. No "&", no "and", no combining.
+- Good: "Bhushi Dam", "Lion's Point", "Tiger's Leap Viewpoint", "Rajmachi Viewpoint"
+- Bad: "Bhushi Dam & Lion's Point", "Karla Caves and Bhaja Caves"
+
+STAY & LOCATION NAMES:
+- NEVER use "Bus Stand", "Railway Station", "Bus Depot" as Stay title. Use the actual tourist area name (e.g. "Tungarli Lake Area", "Mall Road Area", "Old City").
+
+GENERAL:
 - Use REAL Indian city names, train numbers, bus services (GSRTC, MSRTC, RSRTC etc.)
-- Use REAL restaurant/dhaba names when possible, or realistic-sounding ones
-- NEVER use "Bus Stand", "Railway Station", "Bus Depot" or any transport hub as a Stay segment title. Use the actual tourist area, market, lake, or neighborhood name (e.g. "Saputara Lake Area", "Mall Road", "Old City", "Lake Pichola Area"). Stay titles should feel like a vacation, not a transit point.
-- Prices must be realistic for Indian travel (trains ₹50-500, buses ₹100-500, hotels ₹1000-5000, flights ₹4000-10000)
+- Use REAL restaurant/dhaba names when possible
+- Prices must be realistic for Indian travel (trains ₹50-500, hotels ₹1000-5000, flights ₹4000-10000)
 - Include local food specialties of the region
-- Include 2-3 tourist attractions per day
-- Include at least 2 food options per meal (breakfast, lunch, dinner)
+- Include at least 2 food options per meal
 - Include transfer segments if the route has junctions
 - The return segment must have detailed milestones
 - Budget must add up correctly
