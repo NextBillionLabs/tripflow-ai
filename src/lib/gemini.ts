@@ -229,6 +229,14 @@ ITINERARY DENSITY (MOST IMPORTANT):
 - Think in 30-60 minute activity slots. Example for Lonavala: 6AM Sunrise at Tiger's Leap → 7AM Bhushi Dam → 8:30AM Breakfast → 9:30AM Lion's Point → 11AM Rajmachi View → 12PM Della Adventure/Imagica → 1:30PM Lunch → 3PM Karla Caves → 4:30PM Duke's Nose Viewpoint → 6PM Chikki Shopping → 7:30PM Sunset at Pawna Lake → 8:30PM Dinner.
 - NEVER leave a 3-5 hour gap between activities. If you do, you have failed.
 
+GEOGRAPHIC ROUTE SEQUENCING (CRITICAL):
+- Before writing any activities, mentally map ALL the places you plan to include on a geographic line from the hotel/arrival point to the farthest point and back.
+- Sequence activities in a SINGLE DIRECTION along this line — like beads on a string. Travel one way, pick up places, then return. NEVER make the user double back to a place they already passed.
+- Example correct order for Lonavala (hotel is near Lonavala station, eastern side): Hotel → Karla Caves (east, on highway) → Duke's Nose (moving west) → Lion's Point (further west) → Tiger's Leap (furthest west) → Bhushi Dam (returning east) → Chikki Market → Hotel. 
+- Example WRONG order: Hotel → Tiger's Leap (far west) → Karla Caves (far east) → Lion's Point (back west) — this causes massive backtracking.
+- Always think: "Can a cab drive this route without passing the same road twice?" If yes, the route is correct.
+- Group geographically adjacent places consecutively. Places within 2km of each other should always be consecutive in the itinerary.
+
 ACTIVITY TITLES:
 - Every activity title must be ONE specific place name only. No "&", no "and", no combining.
 - Good: "Bhushi Dam", "Lion's Point", "Tiger's Leap Viewpoint", "Rajmachi Viewpoint"
