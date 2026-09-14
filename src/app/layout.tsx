@@ -38,9 +38,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
           rel="stylesheet"
         />
-        {/* Travelpayouts Drive — affiliate tracking */}
+        {/* Travelpayouts Drive — affiliate tracking for tripflow-ai-eight.vercel.app */}
         {/* eslint-disable-next-line @next/next/no-sync-scripts */}
-        <script async src="https://emrld.ltd/NTczNzY2.js?t=573766" data-cmp-ab="2" />
+        <script async src="https://emrld.ltd/NTczNzgw.js?t=573780" data-cmp-ab="2" />
       </head>
       <body className="min-h-screen bg-background text-foreground" suppressHydrationWarning>
         {children}
