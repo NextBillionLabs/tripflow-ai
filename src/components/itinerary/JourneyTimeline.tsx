@@ -113,63 +113,128 @@ function parseDepartDate(dateStr: string) {
   return day && month ? `${year}-${month}-${day}` : "";
 }
 
-function FlightWidgetInline({ from, to, dates, travelers }: { from: string; to: string; dates: string; travelers: number }) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [open, setOpen] = useState(false);
-  const [loaded, setLoaded] = useState(false);
+function FlightBookingPanel({ from, to, dates, travelers }: { from: string; to: string; dates: string; travelers: number }) {
+  const orig = getCityCode(from);
+  const dest = getCityCode(to);
+  const dep = parseDepartDate(dates);
 
-  // Load script AFTER the container div renders (useEffect fires after DOM update)
-  useEffect(() => {
-    if (!open || loaded || !containerRef.current) return;
-    const orig = getCityCode(from);
-    const dest = getCityCode(to);
-    const dep = parseDepartDate(dates);
-    let url = "https://tpemd.com/content?currency=inr&trs=573780&shmarker=777377" +
-      "&show_hotels=false&powered_by=true&locale=en" +
-      "&searchUrl=www.aviasales.com%2Fsearch" +
-      "&primary_override=%230d9488&color_button=%230d9488&color_icons=%230d9488" +
-      "&dark=%23262626&light=%23FFFFFF&secondary=%23FFFFFF&special=%23C4C4C4" +
-      "&color_focused=%230d9488&border_radius=8&plain=false" +
-      "&promo_id=7879&campaign_id=100";
-    if (orig) url += `&origin=${orig}`;
-    if (dest) url += `&destination=${dest}`;
-    if (dep) url += `&depart_date=${dep}`;
-    if (travelers > 1) url += `&adults=${travelers}`;
-    const s = document.createElement("script");
-    s.async = true; s.charset = "utf-8"; s.src = url;
-    containerRef.current.appendChild(s);
-    setLoaded(true);
-  }, [open, loaded, from, to, dates, travelers]);
+  // Build Aviasales deep link with Travelpayouts affiliate tracking
+  const buildUrl = (o: string, d: string) => {
+    if (!o || !d) return `https://www.aviasales.com/?marker=777377.direct`;
+    // Format: /search/BOM0311DEL2?adult=2&currency=inr
+    let datePart = "";
+    if (dep) {
+      const [, month, day] = dep.split("-");
+      datePart = `${day}${month}`;
+    }
+    const pax = travelers || 1;
+    return `https://www.aviasales.com/search/${o}${datePart}${d}${pax}?adult=${pax}&currency=inr&marker=777377.direct`;
+  };
 
-  const origCode = getCityCode(from);
-  const destCode = getCityCode(to);
+  const bookUrl = buildUrl(orig, dest);
+  const hasAirports = orig && dest;
 
   return (
-    <div className="mt-3">
-      <button
-        type="button"
-        onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-bold hover:from-blue-700 hover:to-blue-800 transition-all shadow-md shadow-blue-500/20 cursor-pointer"
-      >
+    <div className="mt-3 border border-blue-100 rounded-xl overflow-hidden bg-gradient-to-b from-blue-50/50 to-white">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-blue-100 bg-blue-50/80">
         <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-[18px]">flight</span>
-          <span>Search &amp; Book Flights</span>
-          {origCode && destCode && (
-            <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">{origCode} → {destCode}</span>
+          <span className="material-symbols-outlined text-blue-600 text-[18px]">flight</span>
+          <span className="text-sm font-bold text-slate-800">Flight Booking</span>
+          {hasAirports && (
+            <span className="text-xs bg-blue-600 text-white px-2 py-0.5 rounded-full font-semibold">
+              {orig} → {dest}
+            </span>
           )}
         </div>
-        <span className="material-symbols-outlined text-[18px]">{open ? "expand_less" : "expand_more"}</span>
-      </button>
-      {(!origCode || !destCode) && (
-        <p className="text-[10px] text-amber-600 mt-1 px-1">
-          ⚠ No direct airport for {!origCode ? from : to}. Search nearby airports below.
-        </p>
-      )}
-      {open && (
-        <div className="mt-2 border border-blue-100 rounded-xl overflow-hidden shadow-sm bg-white">
-          <div className="min-h-[320px]" ref={containerRef} />
+        <span className="text-[10px] text-slate-400">Powered by Aviasales</span>
+      </div>
+
+      <div className="p-4 space-y-3">
+        {/* No airport warning */}
+        {!hasAirports && (
+          <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg">
+            <span className="material-symbols-outlined text-amber-600 text-[16px]">warning</span>
+            <p className="text-xs text-amber-800">
+              No direct airport found for {!orig ? from : to}. Search manually below.
+            </p>
+          </div>
+        )}
+
+        {/* Trip details row */}
+        {hasAirports && dep && (
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <div className="bg-white border border-slate-100 rounded-lg py-2 px-1">
+              <div className="text-[10px] text-slate-400 uppercase font-medium">From</div>
+              <div className="text-sm font-bold text-slate-900">{orig}</div>
+              <div className="text-[10px] text-slate-500">{from}</div>
+            </div>
+            <div className="flex items-center justify-center">
+              <span className="material-symbols-outlined text-blue-500 text-[20px]">flight</span>
+            </div>
+            <div className="bg-white border border-slate-100 rounded-lg py-2 px-1">
+              <div className="text-[10px] text-slate-400 uppercase font-medium">To</div>
+              <div className="text-sm font-bold text-slate-900">{dest}</div>
+              <div className="text-[10px] text-slate-500">{to}</div>
+            </div>
+          </div>
+        )}
+
+        {/* Info pills */}
+        <div className="flex flex-wrap gap-1.5">
+          {dep && (
+            <span className="text-[11px] bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full font-medium">
+              📅 {dep}
+            </span>
+          )}
+          <span className="text-[11px] bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full font-medium">
+            👤 {travelers} Passenger{travelers > 1 ? "s" : ""}
+          </span>
+          <span className="text-[11px] bg-green-50 text-green-700 border border-green-200 px-2.5 py-1 rounded-full font-medium">
+            ✓ Best price guarantee
+          </span>
         </div>
-      )}
+
+        {/* Book Now CTA */}
+        <a
+          href={bookUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-bold hover:from-blue-700 hover:to-blue-800 transition-all shadow-md shadow-blue-500/25 cursor-pointer"
+        >
+          <span className="material-symbols-outlined text-[18px]">flight_takeoff</span>
+          Search &amp; Book Flights
+          <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">Opens Aviasales</span>
+        </a>
+
+        {/* Secondary options */}
+        <div className="flex gap-2">
+          <a
+            href={`https://www.makemytrip.com/flights/cheap-flights-from-${from.toLowerCase()}-to-${to.toLowerCase()}.html`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 py-2 rounded-lg border border-slate-200 text-[11px] font-semibold text-slate-700 text-center hover:bg-slate-50 transition-colors cursor-pointer"
+          >
+            MakeMyTrip
+          </a>
+          <a
+            href={`https://www.goibibo.com/flights/`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 py-2 rounded-lg border border-slate-200 text-[11px] font-semibold text-slate-700 text-center hover:bg-slate-50 transition-colors cursor-pointer"
+          >
+            Goibibo
+          </a>
+          <a
+            href={`https://www.easemytrip.com/flight.html`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 py-2 rounded-lg border border-slate-200 text-[11px] font-semibold text-slate-700 text-center hover:bg-slate-50 transition-colors cursor-pointer"
+          >
+            EaseMyTrip
+          </a>
+        </div>
+      </div>
     </div>
   );
 }
@@ -534,7 +599,7 @@ function TransportCard({ segment, tripFrom, tripTo, tripDates, tripTravelers }: 
                   </div>
                 </div>
               ))}
-              <FlightWidgetInline
+              <FlightBookingPanel
                 from={tripFrom || ""}
                 to={tripTo || ""}
                 dates={tripDates || ""}
@@ -812,5 +877,6 @@ export default function JourneyTimeline({ days, destination, tripFrom, tripDates
     </div>
   );
 }
+
 
 
