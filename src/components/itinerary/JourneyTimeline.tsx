@@ -287,6 +287,88 @@ function FlightSearchForm({ from, to, dates, travelers }: { from: string; to: st
   );
 }
 
+// ─── Flights Tab Content: date-controlled widget + search form ────────────────
+type FlightEntry = { name: string; departure?: string; arrival?: string; duration: string; price?: number; details?: string };
+function FlightsTabContent({ tripFrom, tripTo, tripDates, tripTravelers, flights }: {
+  tripFrom: string; tripTo: string; tripDates: string; tripTravelers: number;
+  flights: FlightEntry[];
+}) {
+  const defaultDate = parseDepartDate(tripDates);
+  const [selectedDate, setSelectedDate] = useState(defaultDate);
+  const origCode = getCityCode(tripFrom);
+  const destCode = getCityCode(tripTo);
+
+  return (
+    <div className="space-y-3">
+      {/* Date + route selector row */}
+      <div className="flex items-center gap-2 px-1">
+        <div className="flex items-center gap-1.5 flex-1 min-w-0">
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide shrink-0">Date</span>
+          <input
+            type="date"
+            value={selectedDate}
+            onChange={e => setSelectedDate(e.target.value)}
+            className="flex-1 px-2 py-1.5 border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-200 cursor-pointer"
+          />
+        </div>
+        {origCode && destCode && (
+          <span className="text-xs font-bold text-teal-700 bg-teal-50 border border-teal-200 px-2 py-1 rounded-lg shrink-0">
+            {origCode} → {destCode}
+          </span>
+        )}
+      </div>
+
+      {/* Schedule Widget — re-mounts when date changes via key */}
+      <TravelpayoutsWidget
+        key={`${origCode}-${destCode}-${selectedDate}`}
+        promoId="2811"
+        origin={origCode}
+        destination={destCode}
+        date={selectedDate}
+        label="Live Flight Schedule"
+      />
+
+      {/* AI suggestions (collapsible) */}
+      {flights.length > 0 && (
+        <details className="group">
+          <summary className="text-[11px] text-slate-500 cursor-pointer hover:text-slate-700 list-none flex items-center gap-1 py-1">
+            <span className="material-symbols-outlined text-[13px] group-open:rotate-90 transition-transform">chevron_right</span>
+            AI-suggested flights (reference)
+          </summary>
+          <div className="mt-2 space-y-2">
+            {flights.map((fl, i) => (
+              <div key={i} className="border border-blue-100 rounded-lg p-2.5 bg-blue-50/20">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-md bg-blue-600 text-white flex items-center justify-center shrink-0">
+                      <span className="material-symbols-outlined text-[13px]">flight</span>
+                    </div>
+                    <div>
+                      <span className="text-xs font-bold text-slate-900">{fl.name}</span>
+                      <span className="text-[10px] text-slate-500 block">
+                        {fl.departure && fl.arrival ? `${fl.departure} → ${fl.arrival} · ` : ""}{fl.duration}
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-[9px] text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full">AI est.</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </details>
+      )}
+
+      {/* Custom search */}
+      <FlightSearchForm
+        from={tripFrom}
+        to={tripTo}
+        dates={tripDates}
+        travelers={tripTravelers}
+      />
+    </div>
+  );
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 function TransportCard({ segment, tripFrom, tripTo, tripDates, tripTravelers }: { segment: Segment; tripFrom?: string; tripTo?: string; tripDates?: string; tripTravelers?: number }) {
   const [expanded, setExpanded] = useState(false);
@@ -632,49 +714,13 @@ function TransportCard({ segment, tripFrom, tripTo, tripDates, tripTravelers }: 
           {/* Flights Tab */}
           {activeTab === "flight" && (
             <div className="p-3 space-y-3">
-              {/* Real-time Schedule Widget */}
-              <TravelpayoutsWidget
-                promoId="2811"
-                origin={getCityCode(tripFrom || "")}
-                destination={getCityCode(tripTo || "")}
-                date={parseDepartDate(tripDates || "")}
-                label="Live Flight Schedule"
-              />
-              {/* AI-suggested flights (reference only) */}
-              {flights.length > 0 && (
-                <details className="group">
-                  <summary className="text-[11px] text-slate-500 cursor-pointer hover:text-slate-700 list-none flex items-center gap-1 py-1">
-                    <span className="material-symbols-outlined text-[13px] group-open:rotate-90 transition-transform">chevron_right</span>
-                    AI-suggested flights (reference only)
-                  </summary>
-                  <div className="mt-2 space-y-2">
-                    {flights.map((fl, i) => (
-                      <div key={i} className="border border-blue-100 rounded-lg p-3 bg-blue-50/20">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center shrink-0">
-                              <span className="material-symbols-outlined text-[14px]">flight</span>
-                            </div>
-                            <div>
-                              <span className="text-xs font-bold text-slate-900">{fl.name}</span>
-                              <span className="text-[11px] text-slate-500 block">
-                                {fl.departure && fl.arrival ? `${fl.departure} → ${fl.arrival} • ` : ""}{fl.duration}
-                              </span>
-                            </div>
-                          </div>
-                          <span className="text-[9px] text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full">AI estimate</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </details>
-              )}
-              {/* Custom Search */}
-              <FlightSearchForm
-                from={tripFrom || ""}
-                to={tripTo || ""}
-                dates={tripDates || ""}
-                travelers={tripTravelers || 1}
+              {/* Date picker to control the Schedule Widget */}
+              <FlightsTabContent
+                tripFrom={tripFrom || ""}
+                tripTo={tripTo || ""}
+                tripDates={tripDates || ""}
+                tripTravelers={tripTravelers || 1}
+                flights={flights}
               />
             </div>
           )}
