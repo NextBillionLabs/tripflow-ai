@@ -287,88 +287,109 @@ function FlightSearchForm({ from, to, dates, travelers }: { from: string; to: st
   );
 }
 
-// ─── Flights Tab Content: date-controlled widget + search form ────────────────
+// ─── Flights Tab Content ─────────────────────────────────────────────────────
 type FlightEntry = { name: string; departure?: string; arrival?: string; duration: string; price?: number; details?: string };
 function FlightsTabContent({ tripFrom, tripTo, tripDates, tripTravelers, flights }: {
   tripFrom: string; tripTo: string; tripDates: string; tripTravelers: number;
   flights: FlightEntry[];
 }) {
   const defaultDate = parseDepartDate(tripDates);
-  const [selectedDate, setSelectedDate] = useState(defaultDate);
-  const origCode = getCityCode(tripFrom);
-  const destCode = getCityCode(tripTo);
+  const [date, setDate] = useState(defaultDate);
+  const [pax, setPax] = useState(tripTravelers || 1);
+  const [origin, setOrigin] = useState(tripFrom.replace(/\s*\(.*\)/, "").trim());
+  const [dest, setDest] = useState(tripTo.replace(/\s*\(.*\)/, "").trim());
+  const origCode = getCityCode(origin);
+  const destCode = getCityCode(dest);
+
+  const buildUrl = () => {
+    if (origCode && destCode && date) {
+      const [, month, day] = date.split("-");
+      return `https://www.aviasales.in/search/${origCode}${day}${month}${destCode}${pax}?adult=${pax}&currency=inr&marker=777377.direct`;
+    }
+    return `https://www.aviasales.in/?marker=777377.direct`;
+  };
 
   return (
-    <div className="space-y-3">
-      {/* Date + route selector row */}
-      <div className="flex items-center gap-2 px-1">
-        <div className="flex items-center gap-1.5 flex-1 min-w-0">
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide shrink-0">Date</span>
-          <input
-            type="date"
-            value={selectedDate}
-            onChange={e => setSelectedDate(e.target.value)}
-            className="flex-1 px-2 py-1.5 border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-200 cursor-pointer"
-          />
-        </div>
-        {origCode && destCode && (
-          <span className="text-xs font-bold text-teal-700 bg-teal-50 border border-teal-200 px-2 py-1 rounded-lg shrink-0">
-            {origCode} → {destCode}
-          </span>
-        )}
-      </div>
-
-      {/* Schedule Widget — re-mounts when date changes via key */}
-      <TravelpayoutsWidget
-        key={`${origCode}-${destCode}-${selectedDate}`}
-        promoId="2811"
-        origin={origCode}
-        destination={destCode}
-        date={selectedDate}
-        label="Live Flight Schedule"
-      />
-
-      {/* AI suggestions (collapsible) */}
+    <div className="p-3 space-y-4">
+      {/* AI flight suggestions - timeline style */}
       {flights.length > 0 && (
-        <details className="group">
-          <summary className="text-[11px] text-slate-500 cursor-pointer hover:text-slate-700 list-none flex items-center gap-1 py-1">
-            <span className="material-symbols-outlined text-[13px] group-open:rotate-90 transition-transform">chevron_right</span>
-            AI-suggested flights (reference)
-          </summary>
-          <div className="mt-2 space-y-2">
-            {flights.map((fl, i) => (
-              <div key={i} className="border border-blue-100 rounded-lg p-2.5 bg-blue-50/20">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-md bg-blue-600 text-white flex items-center justify-center shrink-0">
-                      <span className="material-symbols-outlined text-[13px]">flight</span>
-                    </div>
-                    <div>
-                      <span className="text-xs font-bold text-slate-900">{fl.name}</span>
-                      <span className="text-[10px] text-slate-500 block">
-                        {fl.departure && fl.arrival ? `${fl.departure} → ${fl.arrival} · ` : ""}{fl.duration}
-                      </span>
-                    </div>
-                  </div>
-                  <span className="text-[9px] text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full">AI est.</span>
-                </div>
+        <div className="space-y-2">
+          {flights.map((fl, i) => (
+            <div key={i} className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5">
+              <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-[16px]">flight</span>
               </div>
-            ))}
-          </div>
-        </details>
+              <div className="flex-1 min-w-0">
+                <span className="text-xs font-bold text-slate-900 block truncate">{fl.name}</span>
+                <span className="text-[11px] text-slate-500">
+                  {fl.departure && fl.arrival ? `${fl.departure} → ${fl.arrival} · ` : ""}{fl.duration}
+                </span>
+              </div>
+              <span className="text-[10px] text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full shrink-0">AI est.</span>
+            </div>
+          ))}
+        </div>
       )}
 
-      {/* Custom search */}
-      <FlightSearchForm
-        from={tripFrom}
-        to={tripTo}
-        dates={tripDates}
-        travelers={tripTravelers}
-      />
+      {/* Live price search panel */}
+      <div className="border border-blue-200 rounded-xl overflow-hidden shadow-sm">
+        <div className="flex items-center justify-between px-4 py-2.5 bg-blue-600">
+          <div className="flex items-center gap-2 text-white">
+            <span className="material-symbols-outlined text-[16px]">travel_explore</span>
+            <span className="text-xs font-bold uppercase tracking-wide">Search Real Prices</span>
+          </div>
+          <span className="text-blue-200 text-[10px]">via Aviasales · INR</span>
+        </div>
+        <div className="bg-white p-4 space-y-3">
+          {/* From / To */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">From</label>
+              <div className="relative mt-1">
+                <input value={origin} onChange={e => setOrigin(e.target.value)}
+                  className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200" />
+                {origCode && <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">{origCode}</span>}
+              </div>
+            </div>
+            <div>
+              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">To</label>
+              <div className="relative mt-1">
+                <input value={dest} onChange={e => setDest(e.target.value)}
+                  className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200" />
+                {destCode && <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">{destCode}</span>}
+              </div>
+            </div>
+          </div>
+          {/* Date + Pax */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Date</label>
+              <input type="date" value={date} onChange={e => setDate(e.target.value)}
+                className="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-blue-400 cursor-pointer" />
+            </div>
+            <div>
+              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Passengers</label>
+              <select value={pax} onChange={e => setPax(Number(e.target.value))}
+                className="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-blue-400 cursor-pointer">
+                {[1,2,3,4,5,6].map(n => <option key={n} value={n}>{n} Passenger{n>1?"s":""}</option>)}
+              </select>
+            </div>
+          </div>
+          <button type="button" onClick={() => window.open(buildUrl(), "_blank", "noopener,noreferrer")}
+            className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-bold hover:from-blue-700 hover:to-blue-800 active:scale-[0.98] transition-all shadow-md shadow-blue-500/25 cursor-pointer flex items-center justify-center gap-2">
+            <span className="material-symbols-outlined text-[18px]">flight_takeoff</span>
+            Search &amp; See Real Prices on Aviasales
+          </button>
+          <p className="text-[10px] text-slate-400 text-center -mt-1">Opens Aviasales — live INR prices, book directly</p>
+        </div>
+      </div>
     </div>
   );
 }
 // ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 function TransportCard({ segment, tripFrom, tripTo, tripDates, tripTravelers }: { segment: Segment; tripFrom?: string; tripTo?: string; tripDates?: string; tripTravelers?: number }) {
   const [expanded, setExpanded] = useState(false);
