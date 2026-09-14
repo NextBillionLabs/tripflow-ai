@@ -326,8 +326,14 @@ function TransportCard({ segment, tripFrom, tripTo, tripDates, tripTravelers }: 
           </div>
           <div className="text-right flex items-center gap-3">
             <div className="hidden sm:block">
-              <span className="text-sm font-bold text-slate-900">₹{t.price}</span>
-              <span className="text-xs text-slate-400">/pax</span>
+              {mainIsFlight ? (
+                <span className="text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">Live price ↓</span>
+              ) : (
+                <>
+                  <span className="text-sm font-bold text-slate-900">₹{t.price}</span>
+                  <span className="text-xs text-slate-400">/pax</span>
+                </>
+              )}
             </div>
             <button
               type="button"
@@ -593,15 +599,14 @@ function TransportCard({ segment, tripFrom, tripTo, tripDates, tripTravelers }: 
                         </span>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <span className="text-sm font-bold text-slate-900">~₹{fl.price}</span>
-                      <span className="text-xs text-slate-400 block">/pax est.</span>
-                    </div>
+                    <span className="text-[10px] font-semibold text-blue-600 bg-blue-50 border border-blue-200 px-2 py-1 rounded-full whitespace-nowrap">
+                      Live price ↓
+                    </span>
                   </div>
                 </div>
               ))}
-              <p className="text-[10px] text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-1.5 mt-2">
-                ⚠ Prices above are AI estimates — actual fares may differ. Search below for live prices.
+              <p className="text-[10px] text-slate-500 text-center">
+                ℹ️ AI suggests flight options above — search below for real-time prices &amp; book
               </p>
               <FlightSearchForm
                 from={tripFrom || ""}
