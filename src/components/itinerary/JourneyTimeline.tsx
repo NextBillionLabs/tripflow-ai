@@ -92,7 +92,10 @@ const CITY_IATA: Record<string, string> = {
   visakhapatnam: "VTZ", madurai: "IXM", trichy: "TRZ", agra: "AGR",
   rajkot: "RAJ", vadodara: "BDQ", dehradun: "DED", jammu: "IXJ",
 };
-function getCityCode(c: string) { return CITY_IATA[c.toLowerCase().trim()] || ""; }
+function getCityCode(c: string) {
+  const clean = c.toLowerCase().trim().replace(/\s*\(.*\)/, "").trim();
+  return CITY_IATA[clean] || "";
+}
 function parseDepartDate(dateStr: string) {
   const monthMap: Record<string, string> = {
     jan:"01",feb:"02",mar:"03",apr:"04",may:"05",jun:"06",
@@ -113,131 +116,130 @@ function parseDepartDate(dateStr: string) {
   return day && month ? `${year}-${month}-${day}` : "";
 }
 
-function FlightBookingPanel({ from, to, dates, travelers }: { from: string; to: string; dates: string; travelers: number }) {
-  const orig = getCityCode(from);
-  const dest = getCityCode(to);
-  const dep = parseDepartDate(dates);
+function FlightSearchForm({ from, to, dates, travelers }: { from: string; to: string; dates: string; travelers: number }) {
+function FlightSearchForm({ from, to, dates, travelers }: { from: string; to: string; dates: string; travelers: number }) {
+  const [origin, setOrigin] = useState(from.replace(/\s*\(.*\)/, "").trim());
+  const [destination, setDestination] = useState(to.replace(/\s*\(.*\)/, "").trim());
+  const [date, setDate] = useState(parseDepartDate(dates));
+  const [pax, setPax] = useState(travelers || 1);
 
-  // Build Aviasales deep link with Travelpayouts affiliate tracking
-  const buildUrl = (o: string, d: string) => {
-    if (!o || !d) return `https://www.aviasales.com/?marker=777377.direct`;
-    // Format: /search/BOM0311DEL2?adult=2&currency=inr
-    let datePart = "";
-    if (dep) {
-      const [, month, day] = dep.split("-");
-      datePart = `${day}${month}`;
+  const origCode = getCityCode(origin);
+  const destCode = getCityCode(destination);
+
+  const buildUrl = () => {
+    if (origCode && destCode && date) {
+      const [, month, day] = date.split("-");
+      return `https://www.aviasales.com/search/${origCode}${day}${month}${destCode}${pax}?adult=${pax}&currency=inr&marker=777377.direct`;
     }
-    const pax = travelers || 1;
-    return `https://www.aviasales.com/search/${o}${datePart}${d}${pax}?adult=${pax}&currency=inr&marker=777377.direct`;
+    return `https://www.aviasales.com/?marker=777377.direct`;
   };
 
-  const bookUrl = buildUrl(orig, dest);
-  const hasAirports = orig && dest;
+  const handleSearch = () => {
+    window.open(buildUrl(), "_blank", "noopener,noreferrer");
+  };
 
   return (
-    <div className="mt-3 border border-blue-100 rounded-xl overflow-hidden bg-gradient-to-b from-blue-50/50 to-white">
+    <div className="mt-3 border border-blue-200 rounded-xl overflow-hidden shadow-sm">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-blue-100 bg-blue-50/80">
-        <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-blue-600 text-[18px]">flight</span>
-          <span className="text-sm font-bold text-slate-800">Flight Booking</span>
-          {hasAirports && (
-            <span className="text-xs bg-blue-600 text-white px-2 py-0.5 rounded-full font-semibold">
-              {orig} → {dest}
-            </span>
-          )}
+      <div className="flex items-center justify-between px-4 py-2.5 bg-blue-600">
+        <div className="flex items-center gap-2 text-white">
+          <span className="material-symbols-outlined text-[16px]">flight</span>
+          <span className="text-xs font-bold uppercase tracking-wide">Flight Search</span>
         </div>
-        <span className="text-[10px] text-slate-400">Powered by Aviasales</span>
+        <span className="text-blue-200 text-[10px]">via Aviasales</span>
       </div>
 
-      <div className="p-4 space-y-3">
-        {/* No airport warning */}
-        {!hasAirports && (
-          <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg">
-            <span className="material-symbols-outlined text-amber-600 text-[16px]">warning</span>
-            <p className="text-xs text-amber-800">
-              No direct airport found for {!orig ? from : to}. Search manually below.
-            </p>
-          </div>
-        )}
-
-        {/* Trip details row */}
-        {hasAirports && dep && (
-          <div className="grid grid-cols-3 gap-2 text-center">
-            <div className="bg-white border border-slate-100 rounded-lg py-2 px-1">
-              <div className="text-[10px] text-slate-400 uppercase font-medium">From</div>
-              <div className="text-sm font-bold text-slate-900">{orig}</div>
-              <div className="text-[10px] text-slate-500">{from}</div>
-            </div>
-            <div className="flex items-center justify-center">
-              <span className="material-symbols-outlined text-blue-500 text-[20px]">flight</span>
-            </div>
-            <div className="bg-white border border-slate-100 rounded-lg py-2 px-1">
-              <div className="text-[10px] text-slate-400 uppercase font-medium">To</div>
-              <div className="text-sm font-bold text-slate-900">{dest}</div>
-              <div className="text-[10px] text-slate-500">{to}</div>
+      <div className="bg-white p-4 space-y-3">
+        {/* From / To row */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">From</label>
+            <div className="relative mt-1">
+              <input
+                value={origin}
+                onChange={e => setOrigin(e.target.value)}
+                placeholder="City or airport"
+                className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200 transition-colors"
+              />
+              {origCode && (
+                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
+                  {origCode}
+                </span>
+              )}
             </div>
           </div>
-        )}
-
-        {/* Info pills */}
-        <div className="flex flex-wrap gap-1.5">
-          {dep && (
-            <span className="text-[11px] bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full font-medium">
-              📅 {dep}
-            </span>
-          )}
-          <span className="text-[11px] bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full font-medium">
-            👤 {travelers} Passenger{travelers > 1 ? "s" : ""}
-          </span>
-          <span className="text-[11px] bg-green-50 text-green-700 border border-green-200 px-2.5 py-1 rounded-full font-medium">
-            ✓ Best price guarantee
-          </span>
+          <div>
+            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">To</label>
+            <div className="relative mt-1">
+              <input
+                value={destination}
+                onChange={e => setDestination(e.target.value)}
+                placeholder="City or airport"
+                className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200 transition-colors"
+              />
+              {destCode && (
+                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
+                  {destCode}
+                </span>
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* Book Now CTA */}
-        <a
-          href={bookUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-bold hover:from-blue-700 hover:to-blue-800 transition-all shadow-md shadow-blue-500/25 cursor-pointer"
+        {/* Date + Passengers row */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Depart Date</label>
+            <input
+              type="date"
+              value={date}
+              onChange={e => setDate(e.target.value)}
+              className="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200 transition-colors cursor-pointer"
+            />
+          </div>
+          <div>
+            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Passengers</label>
+            <select
+              value={pax}
+              onChange={e => setPax(Number(e.target.value))}
+              className="w-full mt-1 px-3 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200 transition-colors cursor-pointer"
+            >
+              {[1,2,3,4,5,6].map(n => (
+                <option key={n} value={n}>{n} Passenger{n > 1 ? "s" : ""}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* No airport warning */}
+        {origin && !origCode && (
+          <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+            ⚠ &quot;{origin}&quot; has no direct airport. Try a nearby city (e.g. Surat, Mumbai).
+          </p>
+        )}
+        {destination && !destCode && (
+          <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+            ⚠ &quot;{destination}&quot; has no direct airport. Try a nearby city.
+          </p>
+        )}
+
+        {/* Search CTA */}
+        <button
+          type="button"
+          onClick={handleSearch}
+          className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-bold hover:from-blue-700 hover:to-blue-800 active:scale-[0.98] transition-all shadow-md shadow-blue-500/25 cursor-pointer flex items-center justify-center gap-2"
         >
           <span className="material-symbols-outlined text-[18px]">flight_takeoff</span>
-          Search &amp; Book Flights
-          <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">Opens Aviasales</span>
-        </a>
-
-        {/* Secondary options */}
-        <div className="flex gap-2">
-          <a
-            href={`https://www.makemytrip.com/flights/cheap-flights-from-${from.toLowerCase()}-to-${to.toLowerCase()}.html`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-1 py-2 rounded-lg border border-slate-200 text-[11px] font-semibold text-slate-700 text-center hover:bg-slate-50 transition-colors cursor-pointer"
-          >
-            MakeMyTrip
-          </a>
-          <a
-            href={`https://www.goibibo.com/flights/`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-1 py-2 rounded-lg border border-slate-200 text-[11px] font-semibold text-slate-700 text-center hover:bg-slate-50 transition-colors cursor-pointer"
-          >
-            Goibibo
-          </a>
-          <a
-            href={`https://www.easemytrip.com/flight.html`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-1 py-2 rounded-lg border border-slate-200 text-[11px] font-semibold text-slate-700 text-center hover:bg-slate-50 transition-colors cursor-pointer"
-          >
-            EaseMyTrip
-          </a>
-        </div>
+          Search Flights &amp; Book Now
+        </button>
+        <p className="text-[10px] text-slate-400 text-center -mt-1">
+          Opens Aviasales — compare all airlines &amp; book at best price
+        </p>
       </div>
     </div>
   );
 }
+
 
 function TransportCard({ segment, tripFrom, tripTo, tripDates, tripTravelers }: { segment: Segment; tripFrom?: string; tripTo?: string; tripDates?: string; tripTravelers?: number }) {
   const [expanded, setExpanded] = useState(false);
@@ -599,7 +601,7 @@ function TransportCard({ segment, tripFrom, tripTo, tripDates, tripTravelers }: 
                   </div>
                 </div>
               ))}
-              <FlightBookingPanel
+              <FlightSearchForm
                 from={tripFrom || ""}
                 to={tripTo || ""}
                 dates={tripDates || ""}
@@ -877,6 +879,7 @@ export default function JourneyTimeline({ days, destination, tripFrom, tripDates
     </div>
   );
 }
+
 
 
 
