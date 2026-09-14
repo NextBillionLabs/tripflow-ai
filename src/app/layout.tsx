@@ -39,11 +39,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           rel="stylesheet"
         />
         {/* Travelpayouts Drive — affiliate tracking */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){var script=document.createElement("script");script.async=1;script.setAttribute("data-cmp-ab","2");script.src="https://emrld.ltd/NTczNzY2.js?t=573766";document.head.appendChild(script);})();`,
-          }}
-        />
+        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+        <script async src="https://emrld.ltd/NTczNzY2.js?t=573766" data-cmp-ab="2" />
       </head>
       <body className="min-h-screen bg-background text-foreground" suppressHydrationWarning>
         {children}
