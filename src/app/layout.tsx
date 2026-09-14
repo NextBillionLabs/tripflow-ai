@@ -38,6 +38,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
           rel="stylesheet"
         />
+        {/* Travelpayouts Drive — affiliate tracking */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var script=document.createElement("script");script.async=1;script.setAttribute("data-cmp-ab","2");script.src="https://emrld.ltd/NTczNzY2.js?t=573766";document.head.appendChild(script);})();`,
+          }}
+        />
       </head>
       <body className="min-h-screen bg-background text-foreground" suppressHydrationWarning>
         {children}
