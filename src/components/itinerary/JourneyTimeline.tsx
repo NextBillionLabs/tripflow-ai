@@ -116,6 +116,54 @@ function parseDepartDate(dateStr: string) {
   return day && month ? `${year}-${month}-${day}` : "";
 }
 
+// ─── Travelpayouts Real-Time Widget Loader ───────────────────────────────────
+// promo_id=2811 → Schedule Widget (shows real flights + prices for a route)
+function TravelpayoutsWidget({ promoId, origin, destination, date, label }: {
+  promoId: string; origin?: string; destination?: string; date?: string; label?: string;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const loaded = useRef(false);
+
+  useEffect(() => {
+    if (loaded.current || !containerRef.current) return;
+    loaded.current = true;
+
+    const src = `https://tpemd.com/content?` +
+      `currency=inr&trs=573780&shmarker=777377` +
+      `&color_button=%230d9488` +
+      `&target_host=www.aviasales.in%2Fsearch` +
+      `&locale=en&powered_by=true` +
+      `${origin ? `&origin=${origin}` : ""}` +
+      `${destination ? `&destination=${destination}` : ""}` +
+      `${date ? `&depart_date=${date}` : ""}` +
+      `&with_fallback=false&non_direct_flights=true&min_lines=5` +
+      `&border_radius=8` +
+      `&color_background=%23FFFFFF&color_text=%23000000&color_border=%23FFFFFF` +
+      `&promo_id=${promoId}&campaign_id=100`;
+
+    const s = document.createElement("script");
+    s.async = true; s.charset = "utf-8"; s.src = src;
+    containerRef.current.appendChild(s);
+  }, [promoId, origin, destination, date]);
+
+  return (
+    <div className="mt-3 rounded-xl overflow-hidden border border-slate-200">
+      {label && (
+        <div className="flex items-center justify-between px-4 py-2.5 bg-gradient-to-r from-teal-600 to-teal-700">
+          <div className="flex items-center gap-2 text-white">
+            <span className="material-symbols-outlined text-[15px]">schedule</span>
+            <span className="text-xs font-bold">{label}</span>
+          </div>
+          <span className="text-teal-200 text-[10px]">Live data • Aviasales</span>
+        </div>
+      )}
+      <div className="min-h-[300px] bg-white" ref={containerRef} />
+    </div>
+  );
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
+
 function FlightSearchForm({ from, to, dates, travelers }: { from: string; to: string; dates: string; travelers: number }) {
   const [origin, setOrigin] = useState(from.replace(/\s*\(.*\)/, "").trim());
   const [destination, setDestination] = useState(to.replace(/\s*\(.*\)/, "").trim());
@@ -584,30 +632,44 @@ function TransportCard({ segment, tripFrom, tripTo, tripDates, tripTravelers }: 
           {/* Flights Tab */}
           {activeTab === "flight" && (
             <div className="p-3 space-y-3">
-              {flights.map((fl, i) => (
-                <div key={i} className="border border-blue-100 rounded-lg p-3 bg-blue-50/30">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shrink-0">
-                        <span className="material-symbols-outlined text-[16px]">flight</span>
+              {/* Real-time Schedule Widget */}
+              <TravelpayoutsWidget
+                promoId="2811"
+                origin={getCityCode(tripFrom || "")}
+                destination={getCityCode(tripTo || "")}
+                date={parseDepartDate(tripDates || "")}
+                label="Live Flight Schedule"
+              />
+              {/* AI-suggested flights (reference only) */}
+              {flights.length > 0 && (
+                <details className="group">
+                  <summary className="text-[11px] text-slate-500 cursor-pointer hover:text-slate-700 list-none flex items-center gap-1 py-1">
+                    <span className="material-symbols-outlined text-[13px] group-open:rotate-90 transition-transform">chevron_right</span>
+                    AI-suggested flights (reference only)
+                  </summary>
+                  <div className="mt-2 space-y-2">
+                    {flights.map((fl, i) => (
+                      <div key={i} className="border border-blue-100 rounded-lg p-3 bg-blue-50/20">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center shrink-0">
+                              <span className="material-symbols-outlined text-[14px]">flight</span>
+                            </div>
+                            <div>
+                              <span className="text-xs font-bold text-slate-900">{fl.name}</span>
+                              <span className="text-[11px] text-slate-500 block">
+                                {fl.departure && fl.arrival ? `${fl.departure} → ${fl.arrival} • ` : ""}{fl.duration}
+                              </span>
+                            </div>
+                          </div>
+                          <span className="text-[9px] text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full">AI estimate</span>
+                        </div>
                       </div>
-                      <div>
-                        <span className="text-sm font-bold text-slate-900">{fl.name}</span>
-                        <span className="text-xs text-slate-500 block">
-                          {fl.departure && fl.arrival ? `${fl.departure} → ${fl.arrival} • ` : ""}{fl.duration}
-                          {fl.details ? ` • ${fl.details}` : ""}
-                        </span>
-                      </div>
-                    </div>
-                    <span className="text-[10px] font-semibold text-blue-600 bg-blue-50 border border-blue-200 px-2 py-1 rounded-full whitespace-nowrap">
-                      Live price ↓
-                    </span>
+                    ))}
                   </div>
-                </div>
-              ))}
-              <p className="text-[10px] text-slate-500 text-center">
-                ℹ️ AI suggests flight options above — search below for real-time prices &amp; book
-              </p>
+                </details>
+              )}
+              {/* Custom Search */}
               <FlightSearchForm
                 from={tripFrom || ""}
                 to={tripTo || ""}
