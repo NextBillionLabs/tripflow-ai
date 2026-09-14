@@ -6,6 +6,7 @@ import Navbar from "@/components/layout/Navbar";
 import TripHeader from "@/components/itinerary/TripHeader";
 import JourneyTimeline from "@/components/itinerary/JourneyTimeline";
 import TripSidebar from "@/components/itinerary/TripSidebar";
+import FlightSearchModal from "@/components/itinerary/FlightSearchModal";
 import type { TripData } from "@/types/itinerary";
 
 function ItineraryContent() {
@@ -13,6 +14,7 @@ function ItineraryContent() {
   const [tripData, setTripData] = useState<TripData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showFlightModal, setShowFlightModal] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
 
   useEffect(() => {
@@ -429,7 +431,20 @@ function ItineraryContent() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-8">
       <TripHeader trip={tripData.trip} weatherAlert={tripData.weatherAlert} />
-      <div className="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+      {/* Flight Search Button */}
+      <div className="mt-4 mb-2">
+        <button
+          onClick={() => setShowFlightModal(true)}
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-blue-700 text-white text-sm font-semibold shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 hover:scale-[1.02] transition-all cursor-pointer"
+        >
+          <span className="material-symbols-outlined text-[18px]">flight</span>
+          Search Flights for this Trip
+          <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">Powered by Aviasales</span>
+        </button>
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         <div className="lg:col-span-8">
           <JourneyTimeline days={tripData.days} destination={tripData.trip.to} />
         </div>
@@ -441,6 +456,12 @@ function ItineraryContent() {
           />
         </div>
       </div>
+
+      {/* Flight Search Modal */}
+      <FlightSearchModal
+        isOpen={showFlightModal}
+        onClose={() => setShowFlightModal(false)}
+      />
     </div>
   );
 }
