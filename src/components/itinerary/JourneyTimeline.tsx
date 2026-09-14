@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useRef, useEffect } from "react";
 import PlaceGallery from "@/components/itinerary/PlaceGallery";
@@ -871,7 +871,7 @@ export default function JourneyTimeline({ days, destination, tripFrom, tripDates
 
           {/* Segments */}
           {day.segments.map((segment, i) => (
-            <SegmentCard key={`${day.day}-${i}`} segment={segment} destination={destination} tripFrom={tripFrom} tripTo={destination} tripDates={tripDates} tripTravelers={tripTravelers} />
+            <SegmentCard key={`${day.day}-${i}`} segment={segment} destination={destination} tripFrom={tripFrom} tripDates={tripDates} tripTravelers={tripTravelers} />
           ))}
         </div>
       ))}
