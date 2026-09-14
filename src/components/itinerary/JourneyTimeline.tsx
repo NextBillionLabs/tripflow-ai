@@ -72,11 +72,11 @@ const modeIcons: Record<string, string> = {
 };
 
 const modeEmoji: Record<string, string> = {
-  train: "ðŸš†",
-  bus: "ðŸšŒ",
-  cab: "ðŸš—",
-  auto: "ðŸ›º",
-  walk: "ðŸš¶",
+  train: "🚆",
+  bus: "🚌",
+  cab: "🚗",
+  auto: "🛺",
+  walk: "🚶",
 };
 
 // IATA airport codes for Indian cities
@@ -213,12 +213,12 @@ function FlightSearchForm({ from, to, dates, travelers }: { from: string; to: st
         {/* No airport warning */}
         {origin && !origCode && (
           <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-            âš  &quot;{origin}&quot; has no direct airport. Try a nearby city (e.g. Surat, Mumbai).
+            ⚠ &quot;{origin}&quot; has no direct airport. Try a nearby city (e.g. Surat, Mumbai).
           </p>
         )}
         {destination && !destCode && (
           <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-            âš  &quot;{destination}&quot; has no direct airport. Try a nearby city.
+            ⚠ &quot;{destination}&quot; has no direct airport. Try a nearby city.
           </p>
         )}
 
@@ -232,7 +232,7 @@ function FlightSearchForm({ from, to, dates, travelers }: { from: string; to: st
           Search Flights &amp; Book Now
         </button>
         <p className="text-[10px] text-slate-400 text-center -mt-1">
-          Opens Aviasales â€” compare all airlines &amp; book at best price
+          Opens Aviasales — compare all airlines &amp; book at best price
         </p>
       </div>
     </div>
@@ -277,7 +277,7 @@ function TransportCard({ segment, tripFrom, tripTo, tripDates, tripTravelers }: 
     else if (a.mode === "flight") flights.push({ name: a.name, departure: "", arrival: "", duration: a.duration, price: a.price });
   });
 
-  // Booking URLs â€” from affiliate.ts (affiliate IDs injected automatically)
+  // Booking URLs — from affiliate.ts (affiliate IDs injected automatically)
   const trainCheckUrl = (name: string) => getTrainCheckUrl(name);
   const trainStatusUrl = (name: string) => getTrainStatusUrl(name);
   const trainSearchUrl = () => getTrainSearchUrl(
@@ -300,7 +300,7 @@ function TransportCard({ segment, tripFrom, tripTo, tripDates, tripTravelers }: 
 
   return (
     <div className="mt-4">
-      {/* Main transport info â€” always visible */}
+      {/* Main transport info — always visible */}
       <div className="bg-slate-50 rounded-xl p-3.5 border border-slate-100">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -319,14 +319,14 @@ function TransportCard({ segment, tripFrom, tripTo, tripDates, tripTravelers }: 
                 )}
               </div>
               <span className="text-xs text-slate-500">
-                {t.departure} â†’ {t.arrival} â€¢ {t.duration}
-                {t.details ? ` â€¢ ${t.details}` : ""}
+                {t.departure} → {t.arrival} • {t.duration}
+                {t.details ? ` • ${t.details}` : ""}
               </span>
             </div>
           </div>
           <div className="text-right flex items-center gap-3">
             <div className="hidden sm:block">
-              <span className="text-sm font-bold text-slate-900">â‚¹{t.price}</span>
+              <span className="text-sm font-bold text-slate-900">₹{t.price}</span>
               <span className="text-xs text-slate-400">/pax</span>
             </div>
             <button
@@ -343,7 +343,7 @@ function TransportCard({ segment, tripFrom, tripTo, tripDates, tripTravelers }: 
         </div>
       </div>
 
-      {/* Expanded view â€” Train/Bus/Cab tabs */}
+      {/* Expanded view — Train/Bus/Cab tabs */}
       {expanded && (
         <div className="mt-2 bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm animate-[fadeSlideUp_0.2s_ease-out]">
           {/* Tabs */}
@@ -358,7 +358,7 @@ function TransportCard({ segment, tripFrom, tripTo, tripDates, tripTravelers }: 
                     : "text-slate-400 hover:text-slate-600"
                 }`}
               >
-                ðŸš† Trains ({trains.length})
+                🚆 Trains ({trains.length})
               </button>
             )}
             {(buses.length > 0 || trains.length > 0) && (
@@ -371,10 +371,10 @@ function TransportCard({ segment, tripFrom, tripTo, tripDates, tripTravelers }: 
                     : "text-slate-400 hover:text-slate-600"
                 }`}
               >
-                ðŸšŒ Bus & Cab ({buses.length + cabs.length})
+                🚌 Bus & Cab ({buses.length + cabs.length})
               </button>
             )}
-            {/* Flights tab â€” always show */}
+            {/* Flights tab — always show */}
             <button
               type="button"
               onClick={() => setActiveTab("flight")}
@@ -384,7 +384,7 @@ function TransportCard({ segment, tripFrom, tripTo, tripDates, tripTravelers }: 
                   : "text-slate-400 hover:text-slate-600"
               }`}
             >
-              âœˆï¸ Flights {flights.length > 0 ? `(${flights.length})` : ""}
+              ✈️ Flights {flights.length > 0 ? `(${flights.length})` : ""}
             </button>
           </div>
 
@@ -399,7 +399,7 @@ function TransportCard({ segment, tripFrom, tripTo, tripDates, tripTravelers }: 
                       <div>
                         <span className="text-sm font-bold text-slate-900">{train.name}</span>
                         <span className="text-xs text-slate-500 block">
-                          {train.departure ? `${train.departure} â†’ ${train.arrival} â€¢ ${train.duration}` : train.duration}
+                          {train.departure ? `${train.departure} → ${train.arrival} • ${train.duration}` : train.duration}
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5 text-[10px]">
@@ -422,7 +422,7 @@ function TransportCard({ segment, tripFrom, tripTo, tripDates, tripTravelers }: 
                           }`}
                         >
                           <div className="font-bold text-slate-800">{c.cls}</div>
-                          <div className="font-bold text-slate-900">â‚¹{c.price}</div>
+                          <div className="font-bold text-slate-900">₹{c.price}</div>
                           <div className={`font-semibold ${
                             c.avail.startsWith("AVL") ? "text-emerald-600" :
                             c.avail.startsWith("RAC") ? "text-amber-600" : "text-red-600"
@@ -459,7 +459,7 @@ function TransportCard({ segment, tripFrom, tripTo, tripDates, tripTravelers }: 
                       rel="noopener noreferrer"
                       className="block w-full py-2 rounded-lg bg-slate-900 text-white text-[11px] font-bold text-center hover:bg-slate-800 transition-colors cursor-pointer"
                     >
-                      ðŸŽ« Book Ticket on IRCTC
+                      🎫 Book Ticket on IRCTC
                     </a>
                   </div>
                 );
@@ -496,11 +496,11 @@ function TransportCard({ segment, tripFrom, tripTo, tripDates, tripTravelers }: 
                       </div>
                       <div>
                         <span className="text-sm font-bold text-slate-900">{bus.name}</span>
-                        <span className="text-xs text-slate-500 block">{bus.duration} â€¢ AC Sleeper</span>
+                        <span className="text-xs text-slate-500 block">{bus.duration} • AC Sleeper</span>
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className="text-sm font-bold text-slate-900">â‚¹{bus.price}</span>
+                      <span className="text-sm font-bold text-slate-900">₹{bus.price}</span>
                       <span className="text-xs text-slate-400">/seat</span>
                     </div>
                   </div>
@@ -511,7 +511,7 @@ function TransportCard({ segment, tripFrom, tripTo, tripDates, tripTravelers }: 
                       rel="noopener noreferrer"
                       className="flex-1 py-2 rounded-lg bg-red-600 text-white text-[11px] font-bold text-center hover:bg-red-700 transition-colors cursor-pointer"
                     >
-                      ðŸšŒ RedBus
+                      🚌 RedBus
                     </a>
                     <a
                       href={getAbhiBusUrl(cabFromCity, "")}
@@ -534,18 +534,18 @@ function TransportCard({ segment, tripFrom, tripTo, tripDates, tripTravelers }: 
                       </div>
                       <div>
                         <span className="text-sm font-bold text-slate-900">{cab.name}</span>
-                        <span className="text-xs text-slate-500 block">{cab.duration} â€¢ Outstation</span>
+                        <span className="text-xs text-slate-500 block">{cab.duration} • Outstation</span>
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className="text-sm font-bold text-slate-900">â‚¹{cab.price}</span>
+                      <span className="text-sm font-bold text-slate-900">₹{cab.price}</span>
                       <span className="text-xs text-slate-400">/trip</span>
                     </div>
                   </div>
                   <div className="flex gap-2">
                     <a href={getSavaariUrl(cabFromCity, "")} target="_blank" rel="noopener noreferrer"
                       className="flex-1 py-2 rounded-lg bg-teal-700 text-white text-[11px] font-bold text-center hover:bg-teal-800 transition-colors cursor-pointer">
-                      ðŸš— Savaari
+                      🚗 Savaari
                     </a>
                     <a href={getUberUrl()} target="_blank" rel="noopener noreferrer"
                       className="flex-1 py-2 rounded-lg bg-black text-white text-[11px] font-bold text-center hover:bg-slate-800 transition-colors cursor-pointer">
@@ -568,7 +568,7 @@ function TransportCard({ segment, tripFrom, tripTo, tripDates, tripTravelers }: 
                     rel="noopener noreferrer"
                     className="inline-block py-2 px-4 rounded-lg bg-red-600 text-white text-[11px] font-bold hover:bg-red-700 transition-colors cursor-pointer"
                   >
-                    Search on RedBus â†’
+                    Search on RedBus →
                   </a>
                 </div>
               )}
@@ -588,13 +588,13 @@ function TransportCard({ segment, tripFrom, tripTo, tripDates, tripTravelers }: 
                       <div>
                         <span className="text-sm font-bold text-slate-900">{fl.name}</span>
                         <span className="text-xs text-slate-500 block">
-                          {fl.departure && fl.arrival ? `${fl.departure} â†’ ${fl.arrival} â€¢ ` : ""}{fl.duration}
-                          {fl.details ? ` â€¢ ${fl.details}` : ""}
+                          {fl.departure && fl.arrival ? `${fl.departure} → ${fl.arrival} • ` : ""}{fl.duration}
+                          {fl.details ? ` • ${fl.details}` : ""}
                         </span>
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className="text-sm font-bold text-slate-900">â‚¹{fl.price}</span>
+                      <span className="text-sm font-bold text-slate-900">₹{fl.price}</span>
                       <span className="text-xs text-slate-400 block">/pax</span>
                     </div>
                   </div>
@@ -623,7 +623,7 @@ function TransferCard({ segment }: { segment: Segment }) {
             check_circle
           </span>
           <span className="text-xs text-emerald-700 font-medium">
-            Comfortable connection â€” {segment.bufferMinutes} min transfer buffer
+            Comfortable connection — {segment.bufferMinutes} min transfer buffer
           </span>
         </div>
       )}
@@ -643,7 +643,7 @@ function TransferCard({ segment }: { segment: Segment }) {
                 </span>
               </div>
               <span className="text-xs text-slate-500">
-                {segment.transport.departure} â†’ {segment.transport.arrival} â€¢{" "}
+                {segment.transport.departure} → {segment.transport.arrival} •{" "}
                 {segment.transport.duration}
               </span>
             </div>
@@ -665,14 +665,14 @@ function StayCard({ segment }: { segment: Segment }) {
       <div className="flex items-center justify-between">
         <h4 className="text-sm font-bold text-slate-900">{h.name}</h4>
         <span className="text-sm font-bold text-slate-900">
-          â‚¹{h.price.toLocaleString("en-IN")}
+          ₹{h.price.toLocaleString("en-IN")}
           <span className="text-xs font-normal text-slate-400">/night</span>
         </span>
       </div>
       <p className="text-xs text-slate-500 mt-1">
         {h.type}
-        {h.distance ? ` â€¢ ${h.distance}` : ""}
-        {h.rating ? ` â€¢ ${h.rating} â˜…` : ""}
+        {h.distance ? ` • ${h.distance}` : ""}
+        {h.rating ? ` • ${h.rating} ★` : ""}
       </p>
       <div className="flex items-center gap-2 mt-2.5">
         <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded uppercase">
@@ -736,12 +736,12 @@ function FoodCard({ segment }: { segment: Segment }) {
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-900">{f.name}</span>
             <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
-              {f.rating} â˜…
+              {f.rating} ★
             </span>
           </div>
           <p className="text-[11px] text-slate-500 mt-1">{f.cuisine}</p>
           <span className="text-xs font-semibold text-slate-700 mt-1.5 block">
-            â‚¹{f.price}/pax
+            ₹{f.price}/pax
           </span>
         </div>
       ))}
@@ -816,7 +816,7 @@ function SegmentCard({ segment, destination, tripFrom, tripDates, tripTravelers 
         <div className="flex items-start justify-between gap-2 mb-1">
           <div>
             <span className={`text-xs font-semibold uppercase ${labelColor}`}>
-              {segment.type.replace("_", " ")} â€¢ {segment.time}
+              {segment.type.replace("_", " ")} • {segment.time}
             </span>
             <h3 className="text-base font-bold text-slate-900">{segment.title}</h3>
           </div>
@@ -865,7 +865,7 @@ export default function JourneyTimeline({ days, destination, tripFrom, tripDates
           {/* Day Label */}
           <div className="relative pl-12 pb-5">
             <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-              Day {day.day} â€” {day.date}
+              Day {day.day} — {day.date}
             </div>
           </div>
 
@@ -878,7 +878,6 @@ export default function JourneyTimeline({ days, destination, tripFrom, tripDates
     </div>
   );
 }
-
 
 
 
