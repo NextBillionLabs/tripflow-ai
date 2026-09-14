@@ -461,6 +461,10 @@ function ItineraryContent() {
       <FlightSearchModal
         isOpen={showFlightModal}
         onClose={() => setShowFlightModal(false)}
+        from={tripData.trip.from}
+        to={tripData.trip.to}
+        dates={tripData.trip.dates}
+        travelers={tripData.trip.travelers}
       />
     </div>
   );
