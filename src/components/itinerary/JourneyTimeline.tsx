@@ -117,7 +117,6 @@ function parseDepartDate(dateStr: string) {
 }
 
 function FlightSearchForm({ from, to, dates, travelers }: { from: string; to: string; dates: string; travelers: number }) {
-function FlightSearchForm({ from, to, dates, travelers }: { from: string; to: string; dates: string; travelers: number }) {
   const [origin, setOrigin] = useState(from.replace(/\s*\(.*\)/, "").trim());
   const [destination, setDestination] = useState(to.replace(/\s*\(.*\)/, "").trim());
   const [date, setDate] = useState(parseDepartDate(dates));
