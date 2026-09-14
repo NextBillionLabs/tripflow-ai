@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import PlaceGallery from "@/components/itinerary/PlaceGallery";
 import type { DayPlan, Segment } from "@/types/itinerary";
 import {
@@ -39,6 +39,9 @@ function DirectionButton({ place }: { place: string }) {
 interface JourneyTimelineProps {
   days: DayPlan[];
   destination?: string;
+  tripFrom?: string;
+  tripDates?: string;
+  tripTravelers?: number;
 }
 
 const nodeStyles: Record<string, { bg: string; icon: string }> = {
@@ -76,19 +79,123 @@ const modeEmoji: Record<string, string> = {
   walk: "🚶",
 };
 
-function TransportCard({ segment }: { segment: Segment }) {
+// IATA airport codes for Indian cities
+const CITY_IATA: Record<string, string> = {
+  mumbai: "BOM", bombay: "BOM", delhi: "DEL", "new delhi": "DEL",
+  bangalore: "BLR", bengaluru: "BLR", chennai: "MAA", hyderabad: "HYD",
+  ahmedabad: "AMD", pune: "PNQ", kolkata: "CCU", goa: "GOI", panaji: "GOI",
+  jaipur: "JAI", kochi: "COK", lucknow: "LKO", nagpur: "NAG",
+  surat: "STV", shimla: "SLV", leh: "IXL", varanasi: "VNS",
+  amritsar: "ATQ", udaipur: "UDR", jodhpur: "JDH", coimbatore: "CJB",
+  indore: "IDR", bhopal: "BHO", chandigarh: "IXC", srinagar: "SXR",
+  ranchi: "IXR", patna: "PAT", bhubaneswar: "BBI", raipur: "RPR",
+  visakhapatnam: "VTZ", madurai: "IXM", trichy: "TRZ", agra: "AGR",
+  rajkot: "RAJ", vadodara: "BDQ", dehradun: "DED", jammu: "IXJ",
+};
+function getCityCode(c: string) { return CITY_IATA[c.toLowerCase().trim()] || ""; }
+function parseDepartDate(dateStr: string) {
+  const monthMap: Record<string, string> = {
+    jan:"01",feb:"02",mar:"03",apr:"04",may:"05",jun:"06",
+    jul:"07",aug:"08",sep:"09",oct:"10",nov:"11",dec:"12",
+  };
+  const year = new Date().getFullYear();
+  const part = dateStr.split("-")[0] || dateStr;
+  const tokens = part.toLowerCase().split(/\s+/);
+  let day = "", month = "";
+  for (const t of tokens) {
+    if (/^\d+$/.test(t)) day = t.padStart(2,"0");
+    if (monthMap[t.slice(0,3)]) month = monthMap[t.slice(0,3)];
+  }
+  if (!month) {
+    for (const t of dateStr.toLowerCase().split(/\s+/))
+      if (monthMap[t.slice(0,3)]) { month = monthMap[t.slice(0,3)]; break; }
+  }
+  return day && month ? `${year}-${month}-${day}` : "";
+}
+
+function FlightWidgetInline({ from, to, dates, travelers }: { from: string; to: string; dates: string; travelers: number }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  const toggle = () => {
+    if (!open) {
+      setOpen(true);
+      if (!loaded && containerRef.current) {
+        const orig = getCityCode(from);
+        const dest = getCityCode(to);
+        const dep = parseDepartDate(dates);
+        let url = "https://tpemd.com/content?currency=inr&trs=573780&shmarker=777377" +
+          "&show_hotels=false&powered_by=true&locale=en" +
+          "&searchUrl=www.aviasales.com%2Fsearch" +
+          "&primary_override=%230d9488&color_button=%230d9488&color_icons=%230d9488" +
+          "&dark=%23262626&light=%23FFFFFF&secondary=%23FFFFFF&special=%23C4C4C4" +
+          "&color_focused=%230d9488&border_radius=8&plain=false" +
+          "&promo_id=7879&campaign_id=100";
+        if (orig) url += `&origin=${orig}`;
+        if (dest) url += `&destination=${dest}`;
+        if (dep) url += `&depart_date=${dep}`;
+        if (travelers > 1) url += `&adults=${travelers}`;
+        const s = document.createElement("script");
+        s.async = true; s.charset = "utf-8"; s.src = url;
+        containerRef.current.appendChild(s);
+        setLoaded(true);
+      }
+    } else {
+      setOpen(false);
+    }
+  };
+
+  const origCode = getCityCode(from);
+  const destCode = getCityCode(to);
+
+  return (
+    <div className="mt-3">
+      <button
+        type="button"
+        onClick={toggle}
+        className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-bold hover:from-blue-700 hover:to-blue-800 transition-all shadow-md shadow-blue-500/20 cursor-pointer"
+      >
+        <div className="flex items-center gap-2">
+          <span className="material-symbols-outlined text-[18px]">flight</span>
+          <span>Search &amp; Book Flights</span>
+          {origCode && destCode && (
+            <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">{origCode} → {destCode}</span>
+          )}
+        </div>
+        <span className="material-symbols-outlined text-[18px]">{open ? "expand_less" : "expand_more"}</span>
+      </button>
+      {(!origCode || !destCode) && (
+        <p className="text-[10px] text-amber-600 mt-1 px-1">
+          ⚠ No direct airport for {!origCode ? from : to}. Search nearby airports below.
+        </p>
+      )}
+      {open && (
+        <div className="mt-2 border border-blue-100 rounded-xl overflow-hidden shadow-sm bg-white">
+          <div className="min-h-[280px]" ref={containerRef} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TransportCard({ segment, tripFrom, tripDates, tripTravelers }: { segment: Segment; tripFrom?: string; tripDates?: string; tripTravelers?: number }) {
   const [expanded, setExpanded] = useState(false);
 
   if (!segment.transport) return null;
   const t = segment.transport;
 
-  // Properly separate ALL options into trains, buses, cabs
+  // Properly separate ALL options into trains, buses, cabs, flights
   const mainIsTrain = t.mode === "train";
-  const [activeTab, setActiveTab] = useState<"train" | "bus">(mainIsTrain ? "train" : "bus");
+  const mainIsFlight = t.mode === "flight";
+  const [activeTab, setActiveTab] = useState<"train" | "bus" | "flight">(
+    mainIsFlight ? "flight" : mainIsTrain ? "train" : "bus"
+  );
 
   const trains: { name: string; departure: string; arrival: string; duration: string; price: number; details?: string }[] = [];
   const buses: { name: string; duration: string; price: number }[] = [];
   const cabs: { name: string; duration: string; price: number }[] = [];
+  const flights: { name: string; departure: string; arrival: string; duration: string; price: number; details?: string }[] = [];
 
   // Classify main transport
   if (t.mode === "train") {
@@ -97,6 +204,8 @@ function TransportCard({ segment }: { segment: Segment }) {
     buses.push({ name: t.name, duration: t.duration, price: t.price });
   } else if (t.mode === "cab") {
     cabs.push({ name: t.name, duration: t.duration, price: t.price });
+  } else if (t.mode === "flight") {
+    flights.push({ name: t.name, departure: t.departure, arrival: t.arrival, duration: t.duration, price: t.price, details: t.details });
   }
 
   // Classify alternatives
@@ -104,6 +213,7 @@ function TransportCard({ segment }: { segment: Segment }) {
     if (a.mode === "train") trains.push({ name: a.name, departure: "", arrival: "", duration: a.duration, price: a.price });
     else if (a.mode === "bus" || a.mode === "auto") buses.push({ name: a.name, duration: a.duration, price: a.price });
     else if (a.mode === "cab") cabs.push({ name: a.name, duration: a.duration, price: a.price });
+    else if (a.mode === "flight") flights.push({ name: a.name, departure: "", arrival: "", duration: a.duration, price: a.price });
   });
 
   // Booking URLs — from affiliate.ts (affiliate IDs injected automatically)
@@ -203,6 +313,18 @@ function TransportCard({ segment }: { segment: Segment }) {
                 🚌 Bus & Cab ({buses.length + cabs.length})
               </button>
             )}
+            {/* Flights tab — always show */}
+            <button
+              type="button"
+              onClick={() => setActiveTab("flight")}
+              className={`flex-1 py-2.5 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
+                activeTab === "flight"
+                  ? "text-blue-700 border-b-2 border-blue-600 bg-blue-50/50"
+                  : "text-slate-400 hover:text-slate-600"
+              }`}
+            >
+              ✈️ Flights {flights.length > 0 ? `(${flights.length})` : ""}
+            </button>
           </div>
 
           {/* Train Tab */}
@@ -391,6 +513,40 @@ function TransportCard({ segment }: { segment: Segment }) {
               )}
             </div>
           )}
+
+          {/* Flights Tab */}
+          {activeTab === "flight" && (
+            <div className="p-3 space-y-3">
+              {flights.map((fl, i) => (
+                <div key={i} className="border border-blue-100 rounded-lg p-3 bg-blue-50/30">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shrink-0">
+                        <span className="material-symbols-outlined text-[16px]">flight</span>
+                      </div>
+                      <div>
+                        <span className="text-sm font-bold text-slate-900">{fl.name}</span>
+                        <span className="text-xs text-slate-500 block">
+                          {fl.departure && fl.arrival ? `${fl.departure} → ${fl.arrival} • ` : ""}{fl.duration}
+                          {fl.details ? ` • ${fl.details}` : ""}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-sm font-bold text-slate-900">₹{fl.price}</span>
+                      <span className="text-xs text-slate-400 block">/pax</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <FlightWidgetInline
+                from={tripFrom || ""}
+                to={segment.title?.replace(/\s*(Railway|Station|Airport|International).*$/i, "").trim() || ""}
+                dates={tripDates || ""}
+                travelers={tripTravelers || 1}
+              />
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -575,7 +731,13 @@ function ReturnCard({ segment }: { segment: Segment }) {
   );
 }
 
-function SegmentCard({ segment, destination }: { segment: Segment; destination?: string }) {
+function SegmentCard({ segment, destination, tripFrom, tripDates, tripTravelers }: {
+  segment: Segment;
+  destination?: string;
+  tripFrom?: string;
+  tripDates?: string;
+  tripTravelers?: number;
+}) {
   const style = nodeStyles[segment.type] ?? nodeStyles.activity;
   const labelColor = labelColors[segment.type] ?? "text-slate-600";
 
@@ -604,7 +766,7 @@ function SegmentCard({ segment, destination }: { segment: Segment; destination?:
         )}
 
         {/* Type-specific content */}
-        {segment.type === "departure" && <TransportCard segment={segment} />}
+        {segment.type === "departure" && <TransportCard segment={segment} tripFrom={tripFrom} tripDates={tripDates} tripTravelers={tripTravelers} />}
         {segment.type === "transfer" && <TransferCard segment={segment} />}
         {segment.type === "stay" && (
           <>
@@ -622,13 +784,13 @@ function SegmentCard({ segment, destination }: { segment: Segment; destination?:
           </>
         )}
         {segment.type === "return" && <ReturnCard segment={segment} />}
-        {segment.type === "return" && segment.transport && <TransportCard segment={segment} />}
+        {segment.type === "return" && segment.transport && <TransportCard segment={segment} tripFrom={tripFrom} tripDates={tripDates} tripTravelers={tripTravelers} />}
       </div>
     </div>
   );
 }
 
-export default function JourneyTimeline({ days, destination }: JourneyTimelineProps) {
+export default function JourneyTimeline({ days, destination, tripFrom, tripDates, tripTravelers }: JourneyTimelineProps) {
   const [expandedDay] = useState<number | null>(null);
   void expandedDay;
 
@@ -648,7 +810,7 @@ export default function JourneyTimeline({ days, destination }: JourneyTimelinePr
 
           {/* Segments */}
           {day.segments.map((segment, i) => (
-            <SegmentCard key={`${day.day}-${i}`} segment={segment} destination={destination} />
+            <SegmentCard key={`${day.day}-${i}`} segment={segment} destination={destination} tripFrom={tripFrom} tripDates={tripDates} tripTravelers={tripTravelers} />
           ))}
         </div>
       ))}
