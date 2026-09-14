@@ -112,40 +112,28 @@ export default function FlightSearchModal({
 
     const originCode = getCityIATA(from);
     const destCode = getCityIATA(to);
-    const { depart, returnDate } = parseTripDates(dates);
+    const { depart } = parseTripDates(dates);
 
-    // Build widget URL with pre-filled params
-    const params = new URLSearchParams({
-      currency: "inr",
-      trs: "573780",
-      shmarker: "777377",
-      show_hotels: "false",
-      powered_by: "true",
-      locale: "en",
-      "primary_override": "#0d9488",
-      color_button: "#0d9488",
-      color_icons: "#0d9488",
-      dark: "#262626",
-      light: "#FFFFFF",
-      secondary: "#FFFFFF",
-      special: "#C4C4C4",
-      color_focused: "#0d9488",
-      border_radius: "8",
-      plain: "false",
-      promo_id: "7879",
-      campaign_id: "100",
-    });
+    // Start from the original valid widget URL (colors pre-encoded correctly)
+    let widgetUrl =
+      "https://tpemd.com/content?currency=inr&trs=573780&shmarker=777377" +
+      "&show_hotels=false&powered_by=true&locale=en" +
+      "&searchUrl=www.aviasales.com%2Fsearch" +
+      "&primary_override=%230d9488&color_button=%230d9488&color_icons=%230d9488" +
+      "&dark=%23262626&light=%23FFFFFF&secondary=%23FFFFFF&special=%23C4C4C4" +
+      "&color_focused=%230d9488&border_radius=8&plain=false" +
+      "&promo_id=7879&campaign_id=100";
 
-    // Add pre-fill params if available
-    if (originCode) params.set("origin", originCode);
-    if (destCode) params.set("destination", destCode);
-    if (depart) params.set("depart_date", depart);
-    if (travelers > 1) params.set("adults", String(travelers));
+    // Append pre-fill params
+    if (originCode) widgetUrl += `&origin=${originCode}`;
+    if (destCode) widgetUrl += `&destination=${destCode}`;
+    if (depart) widgetUrl += `&depart_date=${depart}`;
+    if (travelers > 1) widgetUrl += `&adults=${travelers}`;
 
     const script = document.createElement("script");
     script.async = true;
     script.charset = "utf-8";
-    script.src = `https://tpemd.com/content?${params.toString()}`;
+    script.src = widgetUrl;
 
     if (containerRef.current) {
       containerRef.current.appendChild(script);
