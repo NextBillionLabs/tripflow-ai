@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import PlaceGallery from "@/components/itinerary/PlaceGallery";
 import type { DayPlan, Segment } from "@/types/itinerary";
 import {
@@ -118,33 +118,28 @@ function FlightWidgetInline({ from, to, dates, travelers }: { from: string; to: 
   const [open, setOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
-  const toggle = () => {
-    if (!open) {
-      setOpen(true);
-      if (!loaded && containerRef.current) {
-        const orig = getCityCode(from);
-        const dest = getCityCode(to);
-        const dep = parseDepartDate(dates);
-        let url = "https://tpemd.com/content?currency=inr&trs=573780&shmarker=777377" +
-          "&show_hotels=false&powered_by=true&locale=en" +
-          "&searchUrl=www.aviasales.com%2Fsearch" +
-          "&primary_override=%230d9488&color_button=%230d9488&color_icons=%230d9488" +
-          "&dark=%23262626&light=%23FFFFFF&secondary=%23FFFFFF&special=%23C4C4C4" +
-          "&color_focused=%230d9488&border_radius=8&plain=false" +
-          "&promo_id=7879&campaign_id=100";
-        if (orig) url += `&origin=${orig}`;
-        if (dest) url += `&destination=${dest}`;
-        if (dep) url += `&depart_date=${dep}`;
-        if (travelers > 1) url += `&adults=${travelers}`;
-        const s = document.createElement("script");
-        s.async = true; s.charset = "utf-8"; s.src = url;
-        containerRef.current.appendChild(s);
-        setLoaded(true);
-      }
-    } else {
-      setOpen(false);
-    }
-  };
+  // Load script AFTER the container div renders (useEffect fires after DOM update)
+  useEffect(() => {
+    if (!open || loaded || !containerRef.current) return;
+    const orig = getCityCode(from);
+    const dest = getCityCode(to);
+    const dep = parseDepartDate(dates);
+    let url = "https://tpemd.com/content?currency=inr&trs=573780&shmarker=777377" +
+      "&show_hotels=false&powered_by=true&locale=en" +
+      "&searchUrl=www.aviasales.com%2Fsearch" +
+      "&primary_override=%230d9488&color_button=%230d9488&color_icons=%230d9488" +
+      "&dark=%23262626&light=%23FFFFFF&secondary=%23FFFFFF&special=%23C4C4C4" +
+      "&color_focused=%230d9488&border_radius=8&plain=false" +
+      "&promo_id=7879&campaign_id=100";
+    if (orig) url += `&origin=${orig}`;
+    if (dest) url += `&destination=${dest}`;
+    if (dep) url += `&depart_date=${dep}`;
+    if (travelers > 1) url += `&adults=${travelers}`;
+    const s = document.createElement("script");
+    s.async = true; s.charset = "utf-8"; s.src = url;
+    containerRef.current.appendChild(s);
+    setLoaded(true);
+  }, [open, loaded, from, to, dates, travelers]);
 
   const origCode = getCityCode(from);
   const destCode = getCityCode(to);
@@ -153,7 +148,7 @@ function FlightWidgetInline({ from, to, dates, travelers }: { from: string; to: 
     <div className="mt-3">
       <button
         type="button"
-        onClick={toggle}
+        onClick={() => setOpen(o => !o)}
         className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-bold hover:from-blue-700 hover:to-blue-800 transition-all shadow-md shadow-blue-500/20 cursor-pointer"
       >
         <div className="flex items-center gap-2">
@@ -172,14 +167,14 @@ function FlightWidgetInline({ from, to, dates, travelers }: { from: string; to: 
       )}
       {open && (
         <div className="mt-2 border border-blue-100 rounded-xl overflow-hidden shadow-sm bg-white">
-          <div className="min-h-[280px]" ref={containerRef} />
+          <div className="min-h-[320px]" ref={containerRef} />
         </div>
       )}
     </div>
   );
 }
 
-function TransportCard({ segment, tripFrom, tripDates, tripTravelers }: { segment: Segment; tripFrom?: string; tripDates?: string; tripTravelers?: number }) {
+function TransportCard({ segment, tripFrom, tripTo, tripDates, tripTravelers }: { segment: Segment; tripFrom?: string; tripTo?: string; tripDates?: string; tripTravelers?: number }) {
   const [expanded, setExpanded] = useState(false);
 
   if (!segment.transport) return null;
@@ -541,7 +536,7 @@ function TransportCard({ segment, tripFrom, tripDates, tripTravelers }: { segmen
               ))}
               <FlightWidgetInline
                 from={tripFrom || ""}
-                to={segment.title?.replace(/\s*(Railway|Station|Airport|International).*$/i, "").trim() || ""}
+                to={tripTo || ""}
                 dates={tripDates || ""}
                 travelers={tripTravelers || 1}
               />
@@ -766,7 +761,7 @@ function SegmentCard({ segment, destination, tripFrom, tripDates, tripTravelers 
         )}
 
         {/* Type-specific content */}
-        {segment.type === "departure" && <TransportCard segment={segment} tripFrom={tripFrom} tripDates={tripDates} tripTravelers={tripTravelers} />}
+        {segment.type === "departure" && <TransportCard segment={segment} tripFrom={tripFrom} tripTo={destination} tripDates={tripDates} tripTravelers={tripTravelers} />}
         {segment.type === "transfer" && <TransferCard segment={segment} />}
         {segment.type === "stay" && (
           <>
@@ -784,7 +779,7 @@ function SegmentCard({ segment, destination, tripFrom, tripDates, tripTravelers 
           </>
         )}
         {segment.type === "return" && <ReturnCard segment={segment} />}
-        {segment.type === "return" && segment.transport && <TransportCard segment={segment} tripFrom={tripFrom} tripDates={tripDates} tripTravelers={tripTravelers} />}
+        {segment.type === "return" && segment.transport && <TransportCard segment={segment} tripFrom={tripFrom} tripTo={destination} tripDates={tripDates} tripTravelers={tripTravelers} />}
       </div>
     </div>
   );
@@ -810,10 +805,12 @@ export default function JourneyTimeline({ days, destination, tripFrom, tripDates
 
           {/* Segments */}
           {day.segments.map((segment, i) => (
-            <SegmentCard key={`${day.day}-${i}`} segment={segment} destination={destination} tripFrom={tripFrom} tripDates={tripDates} tripTravelers={tripTravelers} />
+            <SegmentCard key={`${day.day}-${i}`} segment={segment} destination={destination} tripFrom={tripFrom} tripTo={destination} tripDates={tripDates} tripTravelers={tripTravelers} />
           ))}
         </div>
       ))}
     </div>
   );
 }
+
+
