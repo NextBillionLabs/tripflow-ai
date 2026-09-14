@@ -44,7 +44,7 @@ const CITY_TO_IATA: Record<string, string> = {
   rajkot: "RAJ",
   vadodara: "BDQ",
   dehradun: "DED",
-  port blair: "IXZ",
+  "port blair": "IXZ",
 };
 
 function getCityIATA(city: string): string {
