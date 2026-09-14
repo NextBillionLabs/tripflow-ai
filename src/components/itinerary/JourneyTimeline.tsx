@@ -594,12 +594,15 @@ function TransportCard({ segment, tripFrom, tripTo, tripDates, tripTravelers }: 
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className="text-sm font-bold text-slate-900">₹{fl.price}</span>
-                      <span className="text-xs text-slate-400 block">/pax</span>
+                      <span className="text-sm font-bold text-slate-900">~₹{fl.price}</span>
+                      <span className="text-xs text-slate-400 block">/pax est.</span>
                     </div>
                   </div>
                 </div>
               ))}
+              <p className="text-[10px] text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-1.5 mt-2">
+                ⚠ Prices above are AI estimates — actual fares may differ. Search below for live prices.
+              </p>
               <FlightSearchForm
                 from={tripFrom || ""}
                 to={tripTo || ""}

@@ -266,12 +266,20 @@ export async function generateItinerary(input: {
   travelers?: number;
   days?: number;
 }): Promise<string> {
+  // Inject today's date so AI picks nearest upcoming dates by default
+  const today = new Date().toLocaleDateString("en-IN", {
+    weekday: "long", day: "2-digit", month: "long", year: "numeric",
+    timeZone: "Asia/Kolkata",
+  });
+
+  const dateContext = `TODAY'S DATE: ${today}. If the user has NOT specified travel dates, default to the EARLIEST POSSIBLE upcoming dates (this weekend or within the next 3-5 days). NEVER pick random dates weeks in the future.`;
+
   let prompt: string;
 
   if (input.query) {
-    prompt = input.query;
+    prompt = `${dateContext}\n\n${input.query}`;
   } else {
-    prompt = `Plan a trip from ${input.from} to ${input.to} for ${input.travelers || 2} travelers, ${input.days || 2} days ${(input.days || 2) - 1} nights. Include the best transport options, hotels, restaurants, and tourist attractions.`;
+    prompt = `${dateContext}\n\nPlan a trip from ${input.from} to ${input.to} for ${input.travelers || 2} travelers, ${input.days || 2} days ${(input.days || 2) - 1} nights. Include the best transport options, hotels, restaurants, and tourist attractions.`;
   }
 
   return generateWithGemini(prompt, {
