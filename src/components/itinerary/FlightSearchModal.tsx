@@ -140,7 +140,6 @@ export default function FlightSearchModal({
     if (originCode) params.set("origin", originCode);
     if (destCode) params.set("destination", destCode);
     if (depart) params.set("depart_date", depart);
-    if (returnDate) params.set("return_date", returnDate);
     if (travelers > 1) params.set("adults", String(travelers));
 
     const script = document.createElement("script");
