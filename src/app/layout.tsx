@@ -38,6 +38,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
           rel="stylesheet"
         />
+        {/* Admitad site ownership verification */}
+        <meta name="mitgo-verification" content="1c134725-75bc-4c27-a9ed-a0cbfc133f83" />
         {/* Travelpayouts Drive — affiliate tracking (production only) */}
         {process.env.NODE_ENV === "production" && (
           // eslint-disable-next-line @next/next/no-sync-scripts
