@@ -490,13 +490,34 @@ function FlightsTabContent({ tripFrom, tripTo, tripDates, tripTravelers, flights
   const origCode = getCityCode(origin);
   const destCode = getCityCode(dest);
 
+  // Live prices from Travelpayouts
+  type LiveFlight = { airline: string; price: number; flight_number: number; departure_at: string };
+  const [livePrices, setLivePrices] = useState<LiveFlight[]>([]);
+  const [loadingPrices, setLoadingPrices] = useState(false);
+  const [priceFetched, setPriceFetched] = useState(false);
+
+  const fetchLivePrices = async () => {
+    if (!origCode || !destCode) return;
+    setLoadingPrices(true);
+    try {
+      const res = await fetch(`/api/flight-prices?from=${origCode}&to=${destCode}&date=${date}`);
+      const json = await res.json();
+      setLivePrices(json.flights || []);
+    } catch { setLivePrices([]); }
+    finally { setLoadingPrices(false); setPriceFetched(true); }
+  };
+
+  // Auto-fetch on mount if codes available
+  useEffect(() => {
+    if (origCode && destCode && !priceFetched) fetchLivePrices();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [origCode, destCode]);
+
   const buildUrl = () => {
     const [, month, day] = (date || "").split("-");
-    // Best case: both IATA codes known → exact pre-filled search URL
     if (origCode && destCode && day && month) {
       return `https://www.aviasales.in/search/${origCode}${day}${month}${destCode}${pax}?adult=${pax}&currency=inr&marker=777377.direct`;
     }
-    // Partial: at least one code known → use query params (Aviasales supports ?origin=&destination=)
     const params = new URLSearchParams();
     if (origCode) params.set("origin", origCode); else if (origin) params.set("origin", origin);
     if (destCode) params.set("destination", destCode); else if (dest) params.set("destination", dest);
@@ -507,21 +528,72 @@ function FlightsTabContent({ tripFrom, tripTo, tripDates, tripTravelers, flights
     return `https://www.aviasales.in/search?${params.toString()}`;
   };
 
+  const airlineNames: Record<string, string> = {
+    "6E": "IndiGo", "AI": "Air India", "SG": "SpiceJet", "UK": "Vistara",
+    "G8": "GoAir", "IX": "Air Asia", "QP": "Akasa Air", "I5": "Air Asia India",
+    "UL": "SriLankan", "EK": "Emirates", "EY": "Etihad", "QR": "Qatar",
+  };
+
   return (
-    <div className="p-3 space-y-4">
-      {/* AI flight suggestions - timeline style */}
-      {flights.length > 0 && (
-        <div className="space-y-2">
+    <div className="p-3 space-y-3">
+
+      {/* LIVE PRICES — the impressive part */}
+      {(livePrices.length > 0 || loadingPrices) && (
+        <div className="border border-emerald-200 rounded-xl overflow-hidden">
+          <div className="flex items-center justify-between px-3 py-2 bg-gradient-to-r from-emerald-600 to-teal-600">
+            <div className="flex items-center gap-1.5 text-white">
+              <span className="material-symbols-outlined text-[15px]">bolt</span>
+              <span className="text-xs font-bold">LIVE PRICES</span>
+            </div>
+            <span className="text-emerald-100 text-[10px]">Real-time · Travelpayouts</span>
+          </div>
+          <div className="bg-white divide-y divide-slate-50">
+            {loadingPrices ? (
+              <div className="flex items-center justify-center gap-2 py-4 text-slate-400 text-xs">
+                <span className="material-symbols-outlined text-[16px] animate-spin">progress_activity</span>
+                Fetching live prices…
+              </div>
+            ) : livePrices.map((f, i) => {
+              const depDate = f.departure_at ? new Date(f.departure_at) : null;
+              const depStr = depDate ? depDate.toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) : "";
+              const depTime = depDate ? depDate.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true }) : "";
+              const url = buildUrl();
+              return (
+                <a key={i} href={url} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-3 px-3 py-2.5 hover:bg-emerald-50/50 transition-colors cursor-pointer">
+                  <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
+                    <span className="text-[10px] font-black text-slate-700">{f.airline}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-xs font-bold text-slate-800">{airlineNames[f.airline] || f.airline} {f.flight_number}</span>
+                    {depStr && <span className="text-[11px] text-slate-400 block">{depStr} · {depTime}</span>}
+                  </div>
+                  <div className="text-right shrink-0">
+                    <span className="text-sm font-black text-emerald-700">₹{f.price.toLocaleString("en-IN")}</span>
+                    <span className="text-[10px] text-slate-400 block">/ person</span>
+                  </div>
+                  <span className="material-symbols-outlined text-slate-300 text-[16px]">open_in_new</span>
+                </a>
+              );
+            })}
+          </div>
+          {!loadingPrices && livePrices.length > 0 && (
+            <div className="px-3 py-1.5 bg-slate-50 border-t border-slate-100">
+              <p className="text-[10px] text-slate-400 text-center">Click any price to book on Aviasales · Prices update hourly</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* AI suggestions (if no live prices yet) */}
+      {flights.length > 0 && livePrices.length === 0 && !loadingPrices && (
+        <div className="space-y-1.5">
           {flights.map((fl, i) => (
             <div key={i} className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5">
-              <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-[16px]">flight</span>
-              </div>
+              <span className="material-symbols-outlined text-blue-500 text-[18px] shrink-0">flight</span>
               <div className="flex-1 min-w-0">
                 <span className="text-xs font-bold text-slate-900 block truncate">{fl.name}</span>
-                <span className="text-[11px] text-slate-500">
-                  {fl.departure && fl.arrival ? `${fl.departure} → ${fl.arrival} · ` : ""}{fl.duration}
-                </span>
+                <span className="text-[11px] text-slate-500">{fl.duration}</span>
               </div>
               <span className="text-[10px] text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full shrink-0">AI est.</span>
             </div>
@@ -529,7 +601,7 @@ function FlightsTabContent({ tripFrom, tripTo, tripDates, tripTravelers, flights
         </div>
       )}
 
-      {/* Live price search panel */}
+      {/* Search form */}
       <div className="border border-blue-200 rounded-xl overflow-hidden shadow-sm">
         <div className="flex items-center justify-between px-4 py-2.5 bg-blue-600">
           <div className="flex items-center gap-2 text-white">
@@ -539,13 +611,12 @@ function FlightsTabContent({ tripFrom, tripTo, tripDates, tripTravelers, flights
           <span className="text-blue-200 text-[10px]">via Aviasales · INR</span>
         </div>
         <div className="bg-white p-4 space-y-3">
-          {/* From / To */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">From</label>
               <div className="relative mt-1">
                 <input value={origin} onChange={e => setOrigin(e.target.value)}
-                  className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200" />
+                  className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-blue-400" />
                 {origCode && <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">{origCode}</span>}
               </div>
             </div>
@@ -553,12 +624,11 @@ function FlightsTabContent({ tripFrom, tripTo, tripDates, tripTravelers, flights
               <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">To</label>
               <div className="relative mt-1">
                 <input value={dest} onChange={e => setDest(e.target.value)}
-                  className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200" />
+                  className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-blue-400" />
                 {destCode && <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">{destCode}</span>}
               </div>
             </div>
           </div>
-          {/* Date + Pax */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Date</label>
@@ -573,23 +643,27 @@ function FlightsTabContent({ tripFrom, tripTo, tripDates, tripTravelers, flights
               </select>
             </div>
           </div>
-          <button type="button" onClick={() => window.open(buildUrl(), "_blank", "noopener,noreferrer")}
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-bold hover:from-blue-700 hover:to-blue-800 active:scale-[0.98] transition-all shadow-md shadow-blue-500/25 cursor-pointer flex items-center justify-center gap-2">
-            <span className="material-symbols-outlined text-[18px]">flight_takeoff</span>
-            Search &amp; See Real Prices on Aviasales
-          </button>
-          <p className="text-[10px] text-slate-400 text-center -mt-1">Opens Aviasales — live INR prices, book directly</p>
+          <div className="grid grid-cols-2 gap-2">
+            <button type="button" onClick={fetchLivePrices} disabled={!origCode || !destCode || loadingPrices}
+              className="py-3 rounded-xl border-2 border-emerald-500 text-emerald-700 text-sm font-bold hover:bg-emerald-50 disabled:opacity-40 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-1.5">
+              <span className="material-symbols-outlined text-[17px]">{loadingPrices ? "progress_activity" : "bolt"}</span>
+              {loadingPrices ? "Loading…" : "Get Prices"}
+            </button>
+            <button type="button" onClick={() => window.open(buildUrl(), "_blank", "noopener,noreferrer")}
+              className="py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-bold hover:from-blue-700 hover:to-blue-800 active:scale-[0.98] transition-all shadow-md cursor-pointer flex items-center justify-center gap-1.5">
+              <span className="material-symbols-outlined text-[17px]">flight_takeoff</span>
+              Book Now
+            </button>
+          </div>
+          <p className="text-[10px] text-slate-400 text-center -mt-1">Live prices via Travelpayouts · Book on Aviasales in INR</p>
         </div>
       </div>
     </div>
   );
 }
-// ─────────────────────────────────────────────────────────────────────────────
-
-
-
 
 function TransportCard({ segment, tripFrom, tripTo, tripDates, tripTravelers }: { segment: Segment; tripFrom?: string; tripTo?: string; tripDates?: string; tripTravelers?: number }) {
+
   const [expanded, setExpanded] = useState(false);
 
   if (!segment.transport) return null;
