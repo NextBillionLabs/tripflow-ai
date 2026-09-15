@@ -203,6 +203,32 @@ function TravelpayoutsWidget({ promoId, origin, destination, date, label }: {
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ─── Car Rental Widget (Localrent · tp.media · promo_id=8813) ─────────────────
+function CarRentalWidget({ city }: { city?: string }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const loaded = useRef(false);
+  useEffect(() => {
+    if (loaded.current || !containerRef.current) return;
+    loaded.current = true;
+    const s = document.createElement("script");
+    s.async = true; s.charset = "utf-8";
+    s.src = "https://tp.media/content?campaign_id=222&promo_id=8813&shmarker=777377&trs=573780";
+    containerRef.current.appendChild(s);
+  }, []);
+  return (
+    <div className="border border-orange-200 rounded-xl overflow-hidden shadow-sm">
+      <div className="flex items-center justify-between px-4 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600">
+        <div className="flex items-center gap-2 text-white">
+          <span className="material-symbols-outlined text-[15px]">car_rental</span>
+          <span className="text-xs font-bold">Rent a Car{city ? ` in ${city}` : ""}</span>
+        </div>
+        <span className="text-orange-100 text-[10px]">via Localrent · Live prices</span>
+      </div>
+      <div className="min-h-[120px] bg-white" ref={containerRef} />
+    </div>
+  );
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 function FlightSearchForm({ from, to, dates, travelers }: { from: string; to: string; dates: string; travelers: number }) {
   const [origin, setOrigin] = useState(from.replace(/\s*\(.*\)/, "").trim());
@@ -445,6 +471,9 @@ function BusCabTabContent({ fromCity, toCity, tripDates, buses, cabs }: {
         </div>
         <p className="text-[10px] text-slate-400 text-center pb-2">Outstation / intercity cab booking</p>
       </div>
+
+      {/* Car Rental Widget — Localrent.com live prices */}
+      <CarRentalWidget city={to || fromCity} />
     </div>
   );
 }
