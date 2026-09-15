@@ -93,7 +93,7 @@ const CITY_IATA: Record<string, string> = {
   visakhapatnam: "VTZ", madurai: "IXM", trichy: "TRZ", agra: "AGR",
   rajkot: "RAJ", vadodara: "BDQ", dehradun: "DED", jammu: "IXJ",
   guwahati: "GAU", imphal: "IMF", dibrugarh: "DIB", silchar: "IXS",
-  port blair: "IXZ", "andaman": "IXZ", tirupati: "TIR", hubli: "HBX",
+  "port blair": "IXZ", "andaman": "IXZ", tirupati: "TIR", hubli: "HBX",
   mangalore: "IXE", belgaum: "IXG", aurangabad: "IXU", nashik: "ISK",
   // ── Sri Lanka ─────────────────────────────────────────────────────────────
   "sri lanka": "CMB", colombo: "CMB", kandy: "CMB", bentota: "CMB",
@@ -113,7 +113,7 @@ const CITY_IATA: Record<string, string> = {
   riyadh: "RUH", jeddah: "JED", bahrain: "BAH",
   // ── Europe ────────────────────────────────────────────────────────────────
   london: "LHR", paris: "CDG", amsterdam: "AMS", frankfurt: "FRA",
-  dubai: "DXB", rome: "FCO", milan: "MXP", barcelona: "BCN",
+  rome: "FCO", milan: "MXP", barcelona: "BCN",
   madrid: "MAD", zurich: "ZRH", vienna: "VIE", prague: "PRG",
   // ── Other popular ─────────────────────────────────────────────────────────
   "new york": "JFK", toronto: "YYZ", sydney: "SYD", melbourne: "MEL",
