@@ -287,6 +287,129 @@ function FlightSearchForm({ from, to, dates, travelers }: { from: string; to: st
   );
 }
 
+// ─── Bus & Cab Tab Content ────────────────────────────────────────────────────
+type BusEntry = { name: string; duration: string; price: number };
+type CabEntry = { name: string; duration: string; price: number };
+function BusCabTabContent({ fromCity, toCity, tripDates, buses, cabs }: {
+  fromCity: string; toCity: string; tripDates: string;
+  buses: BusEntry[]; cabs: CabEntry[];
+}) {
+  const [from, setFrom] = useState(fromCity);
+  const [to, setTo] = useState(toCity);
+  const [date, setDate] = useState(parseDepartDate(tripDates));
+
+  // Format date as DD-Mon-YYYY for RedBus (e.g. 18-Sep-2026)
+  const redBusDate = () => {
+    if (!date) return undefined;
+    const d = new Date(date);
+    return d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }).replace(/ /g, "-");
+  };
+  const redBusUrl = () => getBusUrl(from, to, redBusDate());
+  const abhiBusUrl = () => getAbhiBusUrl(from, to);
+  const savaariUrl = () => getSavaariUrl(from, to);
+
+  return (
+    <div className="p-3 space-y-4">
+      {/* AI-suggested options */}
+      {(buses.length > 0 || cabs.length > 0) && (
+        <div className="space-y-2">
+          {buses.map((bus, i) => (
+            <div key={i} className="flex items-center gap-3 bg-emerald-50/50 border border-emerald-100 rounded-xl px-3 py-2.5">
+              <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-[16px]">directions_bus</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <span className="text-xs font-bold text-slate-900 block truncate">{bus.name}</span>
+                <span className="text-[11px] text-slate-500">{bus.duration} · AC Sleeper</span>
+              </div>
+              <div className="text-right shrink-0">
+                <span className="text-xs font-bold text-slate-900">~₹{bus.price}</span>
+                <span className="text-[10px] text-slate-400 block">AI est.</span>
+              </div>
+            </div>
+          ))}
+          {cabs.map((cab, i) => (
+            <div key={i} className="flex items-center gap-3 bg-amber-50/50 border border-amber-100 rounded-xl px-3 py-2.5">
+              <div className="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-[16px]">directions_car</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <span className="text-xs font-bold text-slate-900 block truncate">{cab.name}</span>
+                <span className="text-[11px] text-slate-500">{cab.duration} · Outstation</span>
+              </div>
+              <div className="text-right shrink-0">
+                <span className="text-xs font-bold text-slate-900">~₹{cab.price}</span>
+                <span className="text-[10px] text-slate-400 block">AI est.</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Route + Date picker */}
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">From</label>
+          <input value={from} onChange={e => setFrom(e.target.value)}
+            className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-100" />
+        </div>
+        <div>
+          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">To</label>
+          <input value={to} onChange={e => setTo(e.target.value)}
+            className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-100" />
+        </div>
+        <div className="col-span-2">
+          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Date</label>
+          <input type="date" value={date} onChange={e => setDate(e.target.value)}
+            className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-emerald-400 cursor-pointer" />
+        </div>
+      </div>
+
+      {/* Bus booking */}
+      <div className="border border-emerald-200 rounded-xl overflow-hidden">
+        <div className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 text-white">
+          <span className="material-symbols-outlined text-[16px]">directions_bus</span>
+          <span className="text-xs font-bold uppercase tracking-wide">Book Bus</span>
+        </div>
+        <div className="p-3 grid grid-cols-2 gap-2">
+          <a href={redBusUrl()} target="_blank" rel="noopener noreferrer"
+            className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-red-600 text-white text-xs font-bold hover:bg-red-700 active:scale-[0.98] transition-all cursor-pointer">
+            🚌 RedBus
+          </a>
+          <a href={abhiBusUrl()} target="_blank" rel="noopener noreferrer"
+            className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-orange-500 text-white text-xs font-bold hover:bg-orange-600 active:scale-[0.98] transition-all cursor-pointer">
+            AbhiBus
+          </a>
+        </div>
+      </div>
+
+      {/* Cab booking */}
+      <div className="border border-amber-200 rounded-xl overflow-hidden">
+        <div className="flex items-center gap-2 px-4 py-2.5 bg-amber-500 text-white">
+          <span className="material-symbols-outlined text-[16px]">directions_car</span>
+          <span className="text-xs font-bold uppercase tracking-wide">Book Cab / Car</span>
+        </div>
+        <div className="p-3 grid grid-cols-3 gap-2">
+          <a href={savaariUrl()} target="_blank" rel="noopener noreferrer"
+            className="flex items-center justify-center py-2.5 rounded-xl bg-teal-700 text-white text-xs font-bold hover:bg-teal-800 active:scale-[0.98] transition-all cursor-pointer">
+            🚗 Savaari
+          </a>
+          <a href={getOlaUrl(from, to)} target="_blank" rel="noopener noreferrer"
+            className="flex items-center justify-center py-2.5 rounded-xl bg-green-600 text-white text-xs font-bold hover:bg-green-700 active:scale-[0.98] transition-all cursor-pointer">
+            Ola
+          </a>
+          <a href={getUberUrl()} target="_blank" rel="noopener noreferrer"
+            className="flex items-center justify-center py-2.5 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-700 active:scale-[0.98] transition-all cursor-pointer">
+            Uber
+          </a>
+        </div>
+        <p className="text-[10px] text-slate-400 text-center pb-2">Outstation / intercity cab booking</p>
+      </div>
+    </div>
+  );
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ─── Flights Tab Content ─────────────────────────────────────────────────────
 type FlightEntry = { name: string; departure?: string; arrival?: string; duration: string; price?: number; details?: string };
 function FlightsTabContent({ tripFrom, tripTo, tripDates, tripTravelers, flights }: {
@@ -428,18 +551,17 @@ function TransportCard({ segment, tripFrom, tripTo, tripDates, tripTravelers }: 
     else if (a.mode === "flight") flights.push({ name: a.name, departure: "", arrival: "", duration: a.duration, price: a.price });
   });
 
-  // Booking URLs — from affiliate.ts (affiliate IDs injected automatically)
+  // Clean city names for booking URLs (strip "Airport", "Station", "(Kashmir)" etc.)
+  const cleanCity = (s: string) => s.replace(/\s*\(.*?\)/g, "").replace(/\s*(International Airport|Airport|Railway Station|Station|Junction|Bus Stand).*$/i, "").trim();
+  const fromCity = cleanCity(tripFrom || segment.title || "");
+  const toCity = cleanCity(tripTo || "");
+
+  // Booking URLs
   const trainCheckUrl = (name: string) => getTrainCheckUrl(name);
   const trainStatusUrl = (name: string) => getTrainStatusUrl(name);
-  const trainSearchUrl = () => getTrainSearchUrl(
-    segment.title?.replace(/\s*(Railway|Station|Junction).*$/i, "").trim() || "",
-    ""
-  );
-  const busUrl = () => getBusUrl(
-    segment.title?.replace(/\s*(Railway|Station|Bus Stand|Junction).*$/i, "").trim() || "",
-    ""
-  );
-  const cabFromCity = segment.title?.replace(/\s*(Railway|Station|Junction).*$/i, "").trim() || "";
+  const trainSearchUrl = () => getTrainSearchUrl(fromCity, toCity);
+  const busUrl = (date?: string) => getBusUrl(fromCity, toCity, date);
+  const cabFromCity = fromCity;
 
   // Train class prices (estimated from base price)
   const getClassPrices = (basePrice: number) => [
@@ -643,93 +765,13 @@ function TransportCard({ segment, tripFrom, tripTo, tripDates, tripTravelers }: 
 
           {/* Bus & Cab Tab */}
           {activeTab === "bus" && (
-            <div className="p-3 space-y-3">
-              {buses.map((bus, i) => (
-                <div key={i} className="border border-slate-100 rounded-lg p-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
-                        <span className="material-symbols-outlined text-[16px]">directions_bus</span>
-                      </div>
-                      <div>
-                        <span className="text-sm font-bold text-slate-900">{bus.name}</span>
-                        <span className="text-xs text-slate-500 block">{bus.duration} • AC Sleeper</span>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-sm font-bold text-slate-900">₹{bus.price}</span>
-                      <span className="text-xs text-slate-400">/seat</span>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <a
-                      href={busUrl()}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 py-2 rounded-lg bg-red-600 text-white text-[11px] font-bold text-center hover:bg-red-700 transition-colors cursor-pointer"
-                    >
-                      🚌 RedBus
-                    </a>
-                    <a
-                      href={getAbhiBusUrl(cabFromCity, "")}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 py-2 rounded-lg bg-orange-500 text-white text-[11px] font-bold text-center hover:bg-orange-600 transition-colors cursor-pointer"
-                    >
-                      AbhiBus
-                    </a>
-                  </div>
-                </div>
-              ))}
-
-              {cabs.map((cab, i) => (
-                <div key={i} className="border border-slate-100 rounded-lg p-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center">
-                        <span className="material-symbols-outlined text-[16px]">directions_car</span>
-                      </div>
-                      <div>
-                        <span className="text-sm font-bold text-slate-900">{cab.name}</span>
-                        <span className="text-xs text-slate-500 block">{cab.duration} • Outstation</span>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-sm font-bold text-slate-900">₹{cab.price}</span>
-                      <span className="text-xs text-slate-400">/trip</span>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <a href={getSavaariUrl(cabFromCity, "")} target="_blank" rel="noopener noreferrer"
-                      className="flex-1 py-2 rounded-lg bg-teal-700 text-white text-[11px] font-bold text-center hover:bg-teal-800 transition-colors cursor-pointer">
-                      🚗 Savaari
-                    </a>
-                    <a href={getUberUrl()} target="_blank" rel="noopener noreferrer"
-                      className="flex-1 py-2 rounded-lg bg-black text-white text-[11px] font-bold text-center hover:bg-slate-800 transition-colors cursor-pointer">
-                      Uber
-                    </a>
-                    <a href={getOlaUrl(cabFromCity, "")} target="_blank" rel="noopener noreferrer"
-                      className="flex-1 py-2 rounded-lg bg-green-600 text-white text-[11px] font-bold text-center hover:bg-green-700 transition-colors cursor-pointer">
-                      Ola
-                    </a>
-                  </div>
-                </div>
-              ))}
-
-              {buses.length === 0 && cabs.length === 0 && (
-                <div className="text-center py-4">
-                  <p className="text-xs text-slate-400 mb-2">No bus/cab options listed</p>
-                  <a
-                    href={busUrl()}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block py-2 px-4 rounded-lg bg-red-600 text-white text-[11px] font-bold hover:bg-red-700 transition-colors cursor-pointer"
-                  >
-                    Search on RedBus →
-                  </a>
-                </div>
-              )}
-            </div>
+            <BusCabTabContent
+              fromCity={fromCity}
+              toCity={toCity}
+              tripDates={tripDates || ""}
+              buses={buses}
+              cabs={cabs}
+            />
           )}
 
           {/* Flights Tab */}
