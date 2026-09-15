@@ -81,6 +81,7 @@ const modeEmoji: Record<string, string> = {
 
 // IATA airport codes for Indian cities
 const CITY_IATA: Record<string, string> = {
+  // ── India ─────────────────────────────────────────────────────────────────
   mumbai: "BOM", bombay: "BOM", delhi: "DEL", "new delhi": "DEL",
   bangalore: "BLR", bengaluru: "BLR", chennai: "MAA", hyderabad: "HYD",
   ahmedabad: "AMD", pune: "PNQ", kolkata: "CCU", goa: "GOI", panaji: "GOI",
@@ -91,11 +92,50 @@ const CITY_IATA: Record<string, string> = {
   ranchi: "IXR", patna: "PAT", bhubaneswar: "BBI", raipur: "RPR",
   visakhapatnam: "VTZ", madurai: "IXM", trichy: "TRZ", agra: "AGR",
   rajkot: "RAJ", vadodara: "BDQ", dehradun: "DED", jammu: "IXJ",
+  guwahati: "GAU", imphal: "IMF", dibrugarh: "DIB", silchar: "IXS",
+  port blair: "IXZ", "andaman": "IXZ", tirupati: "TIR", hubli: "HBX",
+  mangalore: "IXE", belgaum: "IXG", aurangabad: "IXU", nashik: "ISK",
+  // ── Sri Lanka ─────────────────────────────────────────────────────────────
+  "sri lanka": "CMB", colombo: "CMB", kandy: "CMB", bentota: "CMB",
+  galle: "CMB", negombo: "CMB", matara: "CMB",
+  // ── Southeast Asia ────────────────────────────────────────────────────────
+  bangkok: "BKK", "phuket": "HKT", "chiang mai": "CNX", "ko samui": "USM",
+  bali: "DPS", denpasar: "DPS", jakarta: "CGK",
+  singapore: "SIN", "kuala lumpur": "KUL", penang: "PEN",
+  manila: "MNL", cebu: "CEB", boracay: "MPH",
+  hanoi: "HAN", "ho chi minh": "SGN", saigon: "SGN", "da nang": "DAD",
+  phnom: "PNH", "phnom penh": "PNH", siem: "REP", "siem reap": "REP",
+  yangon: "RGN", vientiane: "VTE", kathmandu: "KTM",
+  dhaka: "DAC", chittagong: "CGP",
+  // ── Middle East ───────────────────────────────────────────────────────────
+  dubai: "DXB", "abu dhabi": "AUH", sharjah: "SHJ",
+  doha: "DOH", muscat: "MCT", kuwait: "KWI",
+  riyadh: "RUH", jeddah: "JED", bahrain: "BAH",
+  // ── Europe ────────────────────────────────────────────────────────────────
+  london: "LHR", paris: "CDG", amsterdam: "AMS", frankfurt: "FRA",
+  dubai: "DXB", rome: "FCO", milan: "MXP", barcelona: "BCN",
+  madrid: "MAD", zurich: "ZRH", vienna: "VIE", prague: "PRG",
+  // ── Other popular ─────────────────────────────────────────────────────────
+  "new york": "JFK", toronto: "YYZ", sydney: "SYD", melbourne: "MEL",
+  nairobi: "NBO", mauritius: "MRU", maldives: "MLE", male: "MLE",
+  istanbul: "IST",
 };
-function getCityCode(c: string) {
-  const clean = c.toLowerCase().trim().replace(/\s*\(.*\)/, "").trim();
-  return CITY_IATA[clean] || "";
+
+function getCityCode(c: string): string {
+  // Strip parentheticals like "(Kashmir)", country in parens etc.
+  let clean = c.toLowerCase().trim().replace(/\s*\([^)]*\)/g, "").trim();
+  // Direct match
+  if (CITY_IATA[clean]) return CITY_IATA[clean];
+  // Try first word only (e.g. "Srinagar Kashmir" → "srinagar")
+  const first = clean.split(/\s+/)[0];
+  if (first && CITY_IATA[first]) return CITY_IATA[first];
+  // Partial match — find any key that starts with the input or vice versa
+  for (const key of Object.keys(CITY_IATA)) {
+    if (clean.startsWith(key) || key.startsWith(clean)) return CITY_IATA[key];
+  }
+  return "";
 }
+
 function parseDepartDate(dateStr: string) {
   const monthMap: Record<string, string> = {
     jan:"01",feb:"02",mar:"03",apr:"04",may:"05",jun:"06",
@@ -419,17 +459,26 @@ function FlightsTabContent({ tripFrom, tripTo, tripDates, tripTravelers, flights
   const defaultDate = parseDepartDate(tripDates);
   const [date, setDate] = useState(defaultDate);
   const [pax, setPax] = useState(tripTravelers || 1);
-  const [origin, setOrigin] = useState(tripFrom.replace(/\s*\(.*\)/, "").trim());
-  const [dest, setDest] = useState(tripTo.replace(/\s*\(.*\)/, "").trim());
+  const [origin, setOrigin] = useState(tripFrom.replace(/\s*\([^)]*\)/g, "").trim());
+  const [dest, setDest] = useState(tripTo.replace(/\s*\([^)]*\)/g, "").trim());
   const origCode = getCityCode(origin);
   const destCode = getCityCode(dest);
 
   const buildUrl = () => {
-    if (origCode && destCode && date) {
-      const [, month, day] = date.split("-");
+    const [, month, day] = (date || "").split("-");
+    // Best case: both IATA codes known → exact pre-filled search URL
+    if (origCode && destCode && day && month) {
       return `https://www.aviasales.in/search/${origCode}${day}${month}${destCode}${pax}?adult=${pax}&currency=inr&marker=777377.direct`;
     }
-    return `https://www.aviasales.in/?marker=777377.direct`;
+    // Partial: at least one code known → use query params (Aviasales supports ?origin=&destination=)
+    const params = new URLSearchParams();
+    if (origCode) params.set("origin", origCode); else if (origin) params.set("origin", origin);
+    if (destCode) params.set("destination", destCode); else if (dest) params.set("destination", dest);
+    if (date) params.set("depart_date", date);
+    params.set("adult", String(pax));
+    params.set("currency", "inr");
+    params.set("marker", "777377.direct");
+    return `https://www.aviasales.in/search?${params.toString()}`;
   };
 
   return (
