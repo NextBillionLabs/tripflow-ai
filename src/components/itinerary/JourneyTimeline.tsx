@@ -418,27 +418,21 @@ function BusCabTabContent({ fromCity, toCity, tripDates, buses, cabs }: {
       {/* Bus panel */}
       {tab === "bus" && (
         <div className="space-y-2">
+          {/* Primary search button */}
           <a href={getBusUrl(from, to, fmtDate())} target="_blank" rel="noopener noreferrer"
-            className="flex items-center justify-between w-full px-4 py-3 rounded-xl bg-red-600 text-white hover:bg-red-700 active:scale-[0.98] transition-all cursor-pointer">
-            <div className="flex items-center gap-2">
-              <span className="text-lg">🚌</span>
-              <div className="text-left">
-                <div className="text-sm font-bold">Search on RedBus</div>
-                <div className="text-[11px] text-red-200">{from} → {to}{date ? ` · ${new Date(date).toLocaleDateString("en-IN",{day:"2-digit",month:"short"})}` : ""}</div>
-              </div>
-            </div>
-            <span className="material-symbols-outlined text-[18px] text-red-200">open_in_new</span>
+            className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl bg-gradient-to-r from-red-600 to-red-700 text-white font-bold shadow-md shadow-red-500/25 hover:from-red-700 hover:to-red-800 active:scale-[0.98] transition-all cursor-pointer">
+            <span className="material-symbols-outlined text-[20px]">search</span>
+            <span>Search Buses</span>
+            <span className="text-red-200 text-xs font-normal">· RedBus</span>
           </a>
+          <p className="text-[10px] text-slate-400 text-center">
+            {from} → {to}{date ? ` · ${new Date(date).toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"})}` : ""}
+          </p>
+          {/* Secondary option */}
           <a href={getAbhiBusUrl(from, to)} target="_blank" rel="noopener noreferrer"
-            className="flex items-center justify-between w-full px-4 py-3 rounded-xl bg-orange-500 text-white hover:bg-orange-600 active:scale-[0.98] transition-all cursor-pointer">
-            <div className="flex items-center gap-2">
-              <span className="text-lg">🚍</span>
-              <div className="text-left">
-                <div className="text-sm font-bold">Search on AbhiBus</div>
-                <div className="text-[11px] text-orange-100">{from} → {to}</div>
-              </div>
-            </div>
-            <span className="material-symbols-outlined text-[18px] text-orange-200">open_in_new</span>
+            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border-2 border-orange-400 text-orange-600 font-semibold text-sm hover:bg-orange-50 active:scale-[0.98] transition-all cursor-pointer">
+            <span className="material-symbols-outlined text-[16px]">search</span>
+            Also search AbhiBus →
           </a>
         </div>
       )}
@@ -446,30 +440,31 @@ function BusCabTabContent({ fromCity, toCity, tripDates, buses, cabs }: {
       {/* Cab panel */}
       {tab === "cab" && (
         <div className="space-y-2">
+          {/* Primary search button */}
           <a href={getSavaariUrl(from, to)} target="_blank" rel="noopener noreferrer"
-            className="flex items-center justify-between w-full px-4 py-3 rounded-xl bg-teal-700 text-white hover:bg-teal-800 active:scale-[0.98] transition-all cursor-pointer">
-            <div className="flex items-center gap-2">
-              <span className="text-lg">🚗</span>
-              <div className="text-left">
-                <div className="text-sm font-bold">Savaari — Outstation Cab</div>
-                <div className="text-[11px] text-teal-200">{from} → {to} · Best for long routes</div>
-              </div>
-            </div>
-            <span className="material-symbols-outlined text-[18px] text-teal-300">open_in_new</span>
+            className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl bg-gradient-to-r from-teal-600 to-teal-700 text-white font-bold shadow-md shadow-teal-500/25 hover:from-teal-700 hover:to-teal-800 active:scale-[0.98] transition-all cursor-pointer">
+            <span className="material-symbols-outlined text-[20px]">search</span>
+            <span>Search Outstation Cabs</span>
+            <span className="text-teal-200 text-xs font-normal">· Savaari</span>
           </a>
-          <div className="grid grid-cols-2 gap-2">
+          <p className="text-[10px] text-slate-400 text-center">
+            {from} → {to} · Best for long intercity routes
+          </p>
+          {/* City rides */}
+          <div className="grid grid-cols-2 gap-2 pt-1">
             <a href={getOlaUrl(from, to)} target="_blank" rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 py-3 rounded-xl bg-green-600 text-white text-sm font-bold hover:bg-green-700 active:scale-[0.98] transition-all cursor-pointer">
-              Ola
+              className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl border-2 border-green-400 text-green-700 text-sm font-semibold hover:bg-green-50 active:scale-[0.98] transition-all cursor-pointer">
+              <span className="material-symbols-outlined text-[15px]">search</span> Ola
             </a>
             <a href={getUberUrl()} target="_blank" rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 py-3 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-slate-700 active:scale-[0.98] transition-all cursor-pointer">
-              Uber
+              className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl border-2 border-slate-300 text-slate-700 text-sm font-semibold hover:bg-slate-50 active:scale-[0.98] transition-all cursor-pointer">
+              <span className="material-symbols-outlined text-[15px]">search</span> Uber
             </a>
           </div>
-          <p className="text-[10px] text-slate-400 text-center">Ola & Uber best for city/local rides</p>
+          <p className="text-[10px] text-slate-400 text-center">Ola & Uber for local / city rides</p>
         </div>
       )}
+
 
       {/* Car Rental panel */}
       {tab === "rent" && (
